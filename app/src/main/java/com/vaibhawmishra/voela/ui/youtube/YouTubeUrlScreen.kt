@@ -1,5 +1,10 @@
 package com.vaibhawmishra.voela.ui.youtube
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -28,6 +33,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Link
@@ -53,12 +59,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.components.Waveform
@@ -79,11 +87,24 @@ fun YouTubeUrlScreen(
     onUrlChange: (String) -> Unit,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
+    onClearResult: () -> Unit,
     onClearRecents: () -> Unit,
     onOpenLink: (RecentLink) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showDownloadSheet by remember { mutableStateOf(false) }
+
+    // Ask for notification permission (13+) so extraction progress/completion can show, then extract
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    val extractAction = {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        onExtract()
+    }
 
     Column(
         modifier
@@ -111,8 +132,9 @@ fun YouTubeUrlScreen(
                 status = uiState.status,
                 progress = uiState.progress,
                 result = uiState.result,
-                onExtract = onExtract,
+                onExtract = extractAction,
                 onContinue = onContinue,
+                onClearResult = onClearResult,
                 onDownload = { showDownloadSheet = true },
             )
 
@@ -162,6 +184,7 @@ private fun LinkCard(
     result: ExtractedAudio?,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
+    onClearResult: () -> Unit,
     onDownload: () -> Unit,
 ) {
     val editable = status != ExtractionStatus.Processing
@@ -227,6 +250,21 @@ private fun LinkCard(
         }
         if (status == ExtractionStatus.Done && result != null) {
             Spacer(Modifier.height(16.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    result.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(Modifier.width(8.dp))
+                IconButton(onClick = onClearResult, modifier = Modifier.size(28.dp)) {
+                    Icon(Icons.Outlined.Close, stringResource(R.string.cd_remove_audio), tint = TextSecondary, modifier = Modifier.size(18.dp))
+                }
+            }
+            Spacer(Modifier.height(10.dp))
             ResultRow(result, onDownload = onDownload)
             Spacer(Modifier.height(16.dp))
             PrimaryButton(text = stringResource(R.string.continue_action), onClick = onContinue)
@@ -248,8 +286,10 @@ private fun ProcessingIndicator(progress: Int) {
         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Purple)
         Spacer(Modifier.width(14.dp))
         Text(stringResource(R.string.extracting_audio), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-        Spacer(Modifier.weight(1f))
-        Text("$progress%", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+        if (progress > 0) {
+            Spacer(Modifier.weight(1f))
+            Text("$progress%", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
+        }
     }
 }
 

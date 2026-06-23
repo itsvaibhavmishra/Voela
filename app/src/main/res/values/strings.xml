@@ -40,6 +40,12 @@
     <string name="tos_title">We respect YouTube\'s Terms of Service.</string>
     <string name="tos_desc">Only download content you have the right to use.</string>
 
+    <!-- Notifications -->
+    <string name="notif_channel_progress">Audio extraction</string>
+    <string name="notif_channel_done">Downloads &amp; results</string>
+    <string name="notif_extracting_title">Extracting audio</string>
+    <string name="notif_ready_title">Audio ready</string>
+
     <!-- Content descriptions -->
     <string name="cd_logo">Voela</string>
     <string name="cd_library">Library</string>
@@ -49,4 +55,5 @@
     <string name="cd_play">Play</string>
     <string name="cd_download">Download</string>
     <string name="cd_open_link">Open link</string>
+    <string name="cd_remove_audio">Remove extracted audio</string>
 </resources>
