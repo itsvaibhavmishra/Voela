@@ -29,3 +29,10 @@ LOCAL_PATH := $(call my-dir)
     LOCAL_CFLAGS = -DSTDC_HEADERS
 
     include $(BUILD_SHARED_LIBRARY)
+
+    # JNI shim over the sherpa-onnx C-API (dlopen at runtime; no STL)
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := voela-sep
+    LOCAL_SRC_FILES := SourceSeparation.c
+    LOCAL_LDLIBS := -llog -ldl
+    include $(BUILD_SHARED_LIBRARY)

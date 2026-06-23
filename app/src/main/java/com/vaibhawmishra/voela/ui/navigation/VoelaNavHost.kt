@@ -24,6 +24,8 @@ import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.result.ResultScreen
+import com.vaibhawmishra.voela.ui.result.ResultViewModel
 import com.vaibhawmishra.voela.ui.split.SplitScreen
 import com.vaibhawmishra.voela.ui.split.SplitViewModel
 import com.vaibhawmishra.voela.ui.trim.TrimAudioScreen
@@ -153,7 +155,10 @@ fun VoelaNavHost() {
         ) { entry ->
             val feature = TrimFeature.from(entry.arguments?.getString("feature"))
             val name = entry.arguments?.getString("name").orEmpty()
-            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature))
+            val source = entry.arguments?.getString("source").orEmpty()
+            val start = entry.arguments?.getLong("start") ?: 0L
+            val end = entry.arguments?.getLong("end") ?: 0L
+            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature, source, start, end))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(state.isComplete) {
                 if (state.isComplete) {
@@ -162,7 +167,10 @@ fun VoelaNavHost() {
                     }
                 }
             }
-            SplitScreen(uiState = state, onCancel = navController::popBackStack)
+            LaunchedEffect(state.failed) {
+                if (state.failed) navController.popBackStack()
+            }
+            SplitScreen(uiState = state, onCancel = { viewModel.cancel(); navController.popBackStack() })
         }
         composable(
             Routes.RESULT,
@@ -171,11 +179,16 @@ fun VoelaNavHost() {
                 navArgument("name") { type = NavType.StringType },
             ),
         ) { entry ->
-            val feature = TrimFeature.from(entry.arguments?.getString("feature"))
-            PlaceholderScreen(
-                title = if (feature == TrimFeature.VOCALS) "Vocal Splits" else "Audio Splits",
-                subtitle = entry.arguments?.getString("name").orEmpty(),
+            val name = entry.arguments?.getString("name").orEmpty()
+            val viewModel: ResultViewModel = viewModel(factory = ResultViewModel.factory(name))
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            ResultScreen(
+                uiState = state,
                 onBack = navController::popBackStack,
+                onPlayPause = viewModel::onPlayPause,
+                onSeek = viewModel::onSeek,
+                onSave = viewModel::onSave,
+                onMessageShown = viewModel::onMessageShown,
             )
         }
         composable(Routes.SPLIT, arguments = listOf(navArgument("name") { type = NavType.StringType })) { entry ->

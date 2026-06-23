@@ -39,6 +39,14 @@ class ProcessingNotifications(private val context: Context) {
     fun savingForegroundInfo(progress: Int): ForegroundInfo =
         foreground(SAVE_PROGRESS_ID, context.getString(R.string.notif_saving_title), progress)
 
+    fun separatingForegroundInfo(progress: Int): ForegroundInfo =
+        foreground(SEPARATE_PROGRESS_ID, context.getString(R.string.notif_separating_title), progress)
+
+    @SuppressLint("MissingPermission") // guarded by hasPermission()
+    fun updateSeparating(progress: Int) {
+        if (hasPermission()) manager.notify(SEPARATE_PROGRESS_ID, progressNotification(context.getString(R.string.notif_separating_title), progress))
+    }
+
     @SuppressLint("MissingPermission") // guarded by hasPermission()
     fun updateProgress(progress: Int) {
         if (hasPermission()) manager.notify(PROGRESS_ID, progressNotification(context.getString(R.string.notif_extracting_title), progress))
@@ -101,5 +109,6 @@ class ProcessingNotifications(private val context: Context) {
         const val DONE_ID = 1002
         const val SAVE_PROGRESS_ID = 1003
         const val SAVE_DONE_ID = 1004
+        const val SEPARATE_PROGRESS_ID = 1005
     }
 }

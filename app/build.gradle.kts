@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.datastore.preferences)
+    implementation("com.github.k2-fsa:sherpa-onnx:v1.13.3")
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
     implementation(libs.androidx.media3.exoplayer)

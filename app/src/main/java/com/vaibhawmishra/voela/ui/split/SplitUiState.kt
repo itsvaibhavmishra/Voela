@@ -6,4 +6,5 @@ data class SplitUiState(
     val feature: TrimFeature = TrimFeature.VOCALS,
     val progress: Int = 0,
     val isComplete: Boolean = false,
+    val failed: Boolean = false,
 )

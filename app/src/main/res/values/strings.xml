@@ -79,12 +79,20 @@
     <string name="split_phase_separating">Separating frequencies…</string>
     <string name="split_phase_finishing">Almost done…</string>
 
+    <!-- Result screen -->
+    <string name="result_title">Separation Results</string>
+    <string name="result_subtitle">Your audio has been split into vocals and instrumental.</string>
+    <string name="result_library_title">Saved stems appear in your library</string>
+    <string name="result_library_desc">Use the download icon to keep a stem.</string>
+    <string name="saved_to_vocal_splits">Saved to Vocal Splits</string>
+
     <!-- Notifications -->
     <string name="notif_channel_progress">Audio extraction</string>
     <string name="notif_channel_done">Downloads &amp; results</string>
     <string name="notif_extracting_title">Extracting audio</string>
     <string name="notif_ready_title">Audio ready</string>
     <string name="notif_saving_title">Saving audio</string>
+    <string name="notif_separating_title">Separating audio</string>
     <string name="notif_saved_title">Saved to Music</string>
 
     <!-- Content descriptions -->
