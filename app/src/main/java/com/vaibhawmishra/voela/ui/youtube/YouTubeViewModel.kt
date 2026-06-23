@@ -64,7 +64,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
     fun onExtract() {
         val url = _uiState.value.url
         if (url.isBlank() || _uiState.value.status == ExtractionStatus.Processing) return
-        _uiState.update { it.copy(status = ExtractionStatus.Processing, progress = 0, result = null) }
+        _uiState.update { it.copy(status = ExtractionStatus.Processing, progress = 0, result = null, savedLabel = null) }
         repository.start(url)
     }
 
@@ -98,7 +98,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
             .build()
         saveInitiated = true
         repository.startSave(data)
-        _uiState.update { it.copy(isSaving = true) }
+        _uiState.update { it.copy(isSaving = true, savedLabel = null) }
     }
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
@@ -109,7 +109,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         player.stop()
         player.clearMediaItems()
         repository.clearFinished()
-        _uiState.update { it.copy(status = ExtractionStatus.Idle, progress = 0, result = null, isPlaying = false, positionMs = 0, durationMs = 0) }
+        _uiState.update { it.copy(status = ExtractionStatus.Idle, progress = 0, result = null, isPlaying = false, positionMs = 0, durationMs = 0, savedLabel = null) }
     }
 
     private fun applySaveInfo(info: WorkInfo?) {
@@ -119,7 +119,8 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
 
             WorkInfo.State.SUCCEEDED -> if (saveInitiated) {
                 saveInitiated = false
-                _uiState.update { it.copy(isSaving = false, message = getApplication<Application>().getString(R.string.saved_to_music)) }
+                val label = getApplication<Application>().getString(R.string.saved_to_music)
+                _uiState.update { it.copy(isSaving = false, message = label, savedLabel = label) }
             } else {
                 _uiState.update { it.copy(isSaving = false) }
             }

@@ -37,6 +37,7 @@ data class YouTubeUiState(
     val positionMs: Long = 0,
     val durationMs: Long = 0,
     val isSaving: Boolean = false,
+    val savedLabel: String? = null,
     val message: String? = null,
     val recentLinks: List<RecentLink> = emptyList(),
 ) {

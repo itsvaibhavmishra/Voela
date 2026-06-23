@@ -23,6 +23,7 @@
     <string name="youtube_url_hint">https://www.youtube.com/watch?v=…</string>
     <string name="youtube_support_note">We support videos, shorts, and playlists.</string>
     <string name="extract_audio">Extract Audio</string>
+    <string name="saving_audio">Saving to Music…</string>
     <string name="download_title">Download audio</string>
     <string name="download_subtitle">Choose a format and quality</string>
     <string name="saved_to_music">Saved to Music/Voela</string>

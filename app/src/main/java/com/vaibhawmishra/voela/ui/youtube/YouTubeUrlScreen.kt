@@ -149,6 +149,8 @@ fun YouTubeUrlScreen(
                 result = uiState.result,
                 isPlaying = uiState.isPlaying,
                 playbackProgress = uiState.playbackProgress,
+                isSaving = uiState.isSaving,
+                savedLabel = uiState.savedLabel,
                 onExtract = extractAction,
                 onContinue = onContinue,
                 onClearResult = onClearResult,
@@ -214,6 +216,8 @@ private fun LinkCard(
     result: ExtractedAudio?,
     isPlaying: Boolean,
     playbackProgress: Float,
+    isSaving: Boolean,
+    savedLabel: String?,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
     onClearResult: () -> Unit,
@@ -299,7 +303,18 @@ private fun LinkCard(
                 }
             }
             Spacer(Modifier.height(10.dp))
-            ResultRow(result, isPlaying, playbackProgress, onPlayPause, onSeek, onDownload)
+            ResultRow(result, isPlaying, playbackProgress, isSaving, onPlayPause, onSeek, onDownload)
+            if (isSaving) {
+                Spacer(Modifier.height(8.dp))
+                Text(stringResource(R.string.saving_audio), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            } else if (savedLabel != null) {
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.CheckCircle, null, tint = DownloadGreen, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(savedLabel, style = MaterialTheme.typography.bodySmall, color = DownloadGreen)
+                }
+            }
             Spacer(Modifier.height(16.dp))
             PrimaryButton(text = stringResource(R.string.continue_action), onClick = onContinue)
         }
@@ -336,6 +351,7 @@ private fun ResultRow(
     result: ExtractedAudio,
     isPlaying: Boolean,
     progress: Float,
+    isSaving: Boolean,
     onPlayPause: () -> Unit,
     onSeek: (Float) -> Unit,
     onDownload: () -> Unit,
@@ -370,8 +386,14 @@ private fun ResultRow(
             modifier = Modifier.weight(1f).height(40.dp),
         )
         Spacer(Modifier.width(10.dp))
-        IconButton(onClick = onDownload) {
-            Icon(Icons.Outlined.FileDownload, stringResource(R.string.cd_download), tint = DownloadGreen, modifier = Modifier.size(22.dp))
+        if (isSaving) {
+            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = DownloadGreen)
+            }
+        } else {
+            IconButton(onClick = onDownload) {
+                Icon(Icons.Outlined.FileDownload, stringResource(R.string.cd_download), tint = DownloadGreen, modifier = Modifier.size(22.dp))
+            }
         }
     }
 }
