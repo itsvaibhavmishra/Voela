@@ -10,6 +10,9 @@ enum class TrimFeature(val key: String) {
     }
 }
 
+// Separation engine: FAST runs now; BEST (higher quality) is not wired up yet
+enum class SeparationEngine { FAST, BEST }
+
 data class TrimAudioUiState(
     val feature: TrimFeature = TrimFeature.VOCALS,
     val title: String = "",
@@ -22,6 +25,7 @@ data class TrimAudioUiState(
     val endMs: Long = 0,
     val isPlaying: Boolean = false,
     val positionMs: Long = 0,
+    val engine: SeparationEngine = SeparationEngine.FAST,
 ) {
     val startFraction: Float get() = if (durationMs > 0) startMs.toFloat() / durationMs else 0f
     val endFraction: Float get() = if (durationMs > 0) endMs.toFloat() / durationMs else 1f

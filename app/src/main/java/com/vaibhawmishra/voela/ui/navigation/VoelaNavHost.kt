@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -23,6 +24,8 @@ import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.split.SplitScreen
+import com.vaibhawmishra.voela.ui.split.SplitViewModel
 import com.vaibhawmishra.voela.ui.trim.TrimAudioScreen
 import com.vaibhawmishra.voela.ui.trim.TrimAudioViewModel
 import com.vaibhawmishra.voela.ui.trim.TrimFeature
@@ -36,11 +39,13 @@ private object Routes {
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}"
+    const val RESULT = "result/{feature}/{name}"
     const val SPLIT = "split/{name}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun trim(feature: String, name: String, source: String) = "trim/$feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun process(feature: String, name: String, source: String, start: Long, end: Long) =
         "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end"
+    fun result(feature: String, name: String) = "result/$feature/${Uri.encode(name)}"
     fun split(name: String) = "split/${Uri.encode(name)}"
 }
 
@@ -130,6 +135,7 @@ fun VoelaNavHost() {
                 onRangeChange = viewModel::onRangeChange,
                 onStartStep = viewModel::onStartStep,
                 onEndStep = viewModel::onEndStep,
+                onEngineChange = viewModel::onEngineChange,
                 onProceed = {
                     navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs))
                 },
@@ -146,11 +152,29 @@ fun VoelaNavHost() {
             ),
         ) { entry ->
             val feature = TrimFeature.from(entry.arguments?.getString("feature"))
-            val start = entry.arguments?.getLong("start") ?: 0L
-            val end = entry.arguments?.getLong("end") ?: 0L
+            val name = entry.arguments?.getString("name").orEmpty()
+            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature))
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            LaunchedEffect(state.isComplete) {
+                if (state.isComplete) {
+                    navController.navigate(Routes.result(feature.key, name)) {
+                        popUpTo(Routes.PROCESS) { inclusive = true }
+                    }
+                }
+            }
+            SplitScreen(uiState = state, onCancel = navController::popBackStack)
+        }
+        composable(
+            Routes.RESULT,
+            arguments = listOf(
+                navArgument("feature") { type = NavType.StringType },
+                navArgument("name") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val feature = TrimFeature.from(entry.arguments?.getString("feature"))
             PlaceholderScreen(
-                title = if (feature == TrimFeature.VOCALS) "Split Vocals" else "Split Audio",
-                subtitle = "${TrimAudioViewModel.formatPrecise(start)} – ${TrimAudioViewModel.formatPrecise(end)}",
+                title = if (feature == TrimFeature.VOCALS) "Vocal Splits" else "Audio Splits",
+                subtitle = entry.arguments?.getString("name").orEmpty(),
                 onBack = navController::popBackStack,
             )
         }

@@ -23,10 +23,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.ContentCut
-import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
@@ -44,7 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
-import com.vaibhawmishra.voela.ui.theme.DownloadGreen
+import com.vaibhawmishra.voela.ui.components.OnDeviceFooter
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
@@ -194,30 +192,3 @@ private fun FeatureCard(
     }
 }
 
-@Composable
-private fun OnDeviceFooter() {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Surface)
-            .border(1.dp, Outline, RoundedCornerShape(16.dp))
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Purple.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Outlined.VerifiedUser, null, tint = Purple, modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.on_device_title), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-            Spacer(Modifier.height(2.dp))
-            Text(stringResource(R.string.on_device_desc), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-        }
-        Spacer(Modifier.width(12.dp))
-        Icon(Icons.Outlined.Lock, null, tint = DownloadGreen, modifier = Modifier.size(18.dp))
-    }
-}

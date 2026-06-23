@@ -87,6 +87,8 @@ class TrimAudioViewModel(
         it.copy(endMs = (it.endMs + deltaMs).coerceIn(it.startMs + MIN_RANGE_MS, it.durationMs))
     }
 
+    fun onEngineChange(engine: SeparationEngine) = _uiState.update { it.copy(engine = engine) }
+
     // Moving the start always repositions playback to it, so playback runs from the new start
     private fun seekToStart(startMs: Long) {
         player.seekTo(startMs)

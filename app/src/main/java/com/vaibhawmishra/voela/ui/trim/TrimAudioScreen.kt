@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
@@ -37,9 +38,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
@@ -66,6 +69,7 @@ fun TrimAudioScreen(
     onRangeChange: (Float, Float) -> Unit,
     onStartStep: (Long) -> Unit,
     onEndStep: (Long) -> Unit,
+    onEngineChange: (SeparationEngine) -> Unit,
     onProceed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -110,7 +114,7 @@ fun TrimAudioScreen(
                 )
                 Spacer(Modifier.height(16.dp))
                 PlayButton(uiState.isPlaying, onPlayPause)
-                Spacer(Modifier.height(24.dp))
+                Spacer(Modifier.height(12.dp))
 
                 Text(stringResource(R.string.trim_select_range), style = MaterialTheme.typography.titleSmall, color = TextSecondary)
                 Spacer(Modifier.height(8.dp))
@@ -147,6 +151,28 @@ fun TrimAudioScreen(
                 }
                 Spacer(Modifier.height(14.dp))
                 InfoNote()
+                Spacer(Modifier.height(24.dp))
+
+                Text(stringResource(R.string.trim_quality), style = MaterialTheme.typography.titleSmall, color = TextSecondary)
+                Spacer(Modifier.height(10.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    EngineOption(
+                        title = stringResource(R.string.engine_fast),
+                        description = stringResource(R.string.engine_fast_desc),
+                        selected = uiState.engine == SeparationEngine.FAST,
+                        enabled = true,
+                        onClick = { onEngineChange(SeparationEngine.FAST) },
+                        modifier = Modifier.weight(1f),
+                    )
+                    EngineOption(
+                        title = stringResource(R.string.engine_best),
+                        description = stringResource(R.string.engine_best_desc),
+                        selected = false,
+                        enabled = false,
+                        onClick = {},
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -268,6 +294,38 @@ private fun TimeField(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun EngineOption(
+    title: String,
+    description: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(if (selected) Purple.copy(alpha = 0.12f) else Background)
+            .border(1.dp, if (selected) Purple else Outline, RoundedCornerShape(14.dp))
+            .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
+            .alpha(if (enabled) 1f else 0.55f)
+            .padding(14.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                title,
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = if (enabled) TextPrimary else TextSecondary,
+                modifier = Modifier.weight(1f),
+            )
+            if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = Purple, modifier = Modifier.size(16.dp))
+        }
+        Spacer(Modifier.height(3.dp))
+        Text(description, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
     }
 }
 

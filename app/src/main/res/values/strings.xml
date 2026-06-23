@@ -62,9 +62,22 @@
     <string name="trim_start_time">Start Time</string>
     <string name="trim_end_time">End Time</string>
     <string name="trim_linked_note">Start and end time are linked. Adjust one to update the other.</string>
+    <string name="trim_quality">Quality</string>
+    <string name="engine_fast">Fast</string>
+    <string name="engine_fast_desc">Quick, good for most</string>
+    <string name="engine_best">Best quality</string>
+    <string name="engine_best_desc">Coming soon</string>
     <string name="cd_step_up">Increase</string>
     <string name="cd_step_down">Decrease</string>
     <string name="cd_linked">Linked</string>
+
+    <!-- Split / processing screen -->
+    <string name="split_processing_vocals">Splitting Vocals &amp; Instrumental</string>
+    <string name="split_processing_audio">Splitting Audio</string>
+    <string name="split_processing_subtitle">This may take a few moments. Please don\'t close the app.</string>
+    <string name="split_phase_preparing">Preparing…</string>
+    <string name="split_phase_separating">Separating frequencies…</string>
+    <string name="split_phase_finishing">Almost done…</string>
 
     <!-- Notifications -->
     <string name="notif_channel_progress">Audio extraction</string>
