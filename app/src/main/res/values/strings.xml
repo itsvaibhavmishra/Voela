@@ -11,6 +11,11 @@
     <string name="recents_empty_title">No recents yet</string>
     <string name="recents_empty_subtitle">Your processed audio will show up here</string>
 
+    <!-- Recents menu -->
+    <string name="action_open">Open</string>
+    <string name="action_share">Share</string>
+    <string name="action_delete">Delete</string>
+
     <!-- Content descriptions -->
     <string name="cd_logo">Voela</string>
     <string name="cd_library">Library</string>

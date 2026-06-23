@@ -1,10 +1,12 @@
 package com.vaibhawmishra.voela.ui.home
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,17 +26,26 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.rounded.DeleteOutline
 import androidx.compose.material.icons.rounded.Folder
 import androidx.compose.material.icons.rounded.FolderOpen
 import androidx.compose.material.icons.rounded.GraphicEq
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material.icons.rounded.SmartDisplay
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,9 +57,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.Waveform
 import com.vaibhawmishra.voela.ui.components.waveformBars
@@ -57,11 +69,13 @@ import com.vaibhawmishra.voela.ui.theme.VoelaTheme
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
+import com.vaibhawmishra.voela.ui.theme.ShareBlue
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 import com.vaibhawmishra.voela.ui.theme.VocalsAmber
+import com.vaibhawmishra.voela.ui.theme.Warning
 
 @Composable
 fun HomeScreen(
@@ -198,6 +212,7 @@ private fun RecentsHeader(showViewAll: Boolean, onViewAll: () -> Unit) {
 @Composable
 private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
     val accent = if (item.type == ProcessType.VOCAL_REMOVAL) Purple else InstrumentalTeal
+    var menuExpanded by remember { mutableStateOf(false) }
     Row(
         Modifier
             .fillMaxWidth()
@@ -243,14 +258,56 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
             TypeBadge(item.type)
             Text(item.timeAgo, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
         }
-        Spacer(Modifier.width(8.dp))
-        Icon(
-            Icons.Rounded.MoreVert,
-            stringResource(R.string.cd_more_options),
-            tint = TextSecondary,
-            modifier = Modifier.size(20.dp),
-        )
+        Spacer(Modifier.width(4.dp))
+        Box {
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(
+                    Icons.Rounded.MoreVert,
+                    stringResource(R.string.cd_more_options),
+                    tint = TextSecondary,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false },
+                offset = DpOffset(0.dp, 6.dp),
+                shape = RoundedCornerShape(16.dp),
+                containerColor = SurfaceElevated,
+                border = BorderStroke(1.dp, Outline),
+                tonalElevation = 0.dp,
+                shadowElevation = 12.dp,
+            ) {
+                RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Rounded.OpenInNew, Purple, TextPrimary) {
+                    menuExpanded = false
+                    onClick()
+                }
+                RecentMenuItem(stringResource(R.string.action_share), Icons.Rounded.Share, ShareBlue, TextPrimary) {
+                    menuExpanded = false
+                }
+                HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = Outline)
+                RecentMenuItem(stringResource(R.string.action_delete), Icons.Rounded.DeleteOutline, Warning, Warning) {
+                    menuExpanded = false
+                }
+            }
+        }
     }
+}
+
+@Composable
+private fun RecentMenuItem(
+    label: String,
+    icon: ImageVector,
+    iconTint: Color,
+    textColor: Color,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = { Text(label, style = MaterialTheme.typography.bodyMedium, color = textColor) },
+        leadingIcon = { Icon(icon, null, tint = iconTint, modifier = Modifier.size(20.dp)) },
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 2.dp),
+    )
 }
 
 @Composable
