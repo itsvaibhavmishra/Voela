@@ -105,36 +105,42 @@ fun YouTubeUrlScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.systemBars)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp)
-            .padding(bottom = 24.dp),
+            .padding(horizontal = 20.dp),
     ) {
-        Header(onBack)
-        Spacer(Modifier.height(8.dp))
-        Text(stringResource(R.string.youtube_title), style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
-        Spacer(Modifier.height(4.dp))
-        Text(stringResource(R.string.youtube_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-        Spacer(Modifier.height(20.dp))
-
-        LinkCard(
-            url = url,
-            onUrlChange = { url = it },
-            state = state,
-            onExtract = { state = ExtractionState.Processing },
-            onContinue = onContinue,
-            onDownload = { showDownloadSheet = true },
-        )
-
-        if (state == ExtractionState.Idle) {
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
+        ) {
+            Header(onBack)
+            Spacer(Modifier.height(8.dp))
+            Text(stringResource(R.string.youtube_title), style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
+            Spacer(Modifier.height(4.dp))
+            Text(stringResource(R.string.youtube_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
             Spacer(Modifier.height(20.dp))
-            HowItWorksCard()
+
+            LinkCard(
+                url = url,
+                onUrlChange = { url = it },
+                state = state,
+                onExtract = { state = ExtractionState.Processing },
+                onContinue = onContinue,
+                onDownload = { showDownloadSheet = true },
+            )
+
+            if (state == ExtractionState.Idle) {
+                Spacer(Modifier.height(20.dp))
+                HowItWorksCard()
+            }
+
+            Spacer(Modifier.height(24.dp))
+            RecentLinksSection(recents = recents, onClearAll = { recents.clear() }, onOpenLink = onOpenLink)
         }
 
-        Spacer(Modifier.height(24.dp))
-        RecentLinksSection(recents = recents, onClearAll = { recents.clear() }, onOpenLink = onOpenLink)
-
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(16.dp))
         FooterNote()
+        Spacer(Modifier.height(8.dp))
     }
 
     if (showDownloadSheet) {
