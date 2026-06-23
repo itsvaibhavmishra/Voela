@@ -28,9 +28,9 @@ private object Routes {
     const val HOME = "home"
     const val YOUTUBE = "youtube"
     const val LIBRARY = "library"
-    const val FEATURE = "feature/{name}"
+    const val FEATURE = "feature/{name}/{source}"
     const val SPLIT = "split/{name}"
-    fun feature(name: String) = "feature/${Uri.encode(name)}"
+    fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun split(name: String) = "split/${Uri.encode(name)}"
 }
 
@@ -49,7 +49,7 @@ fun VoelaNavHost() {
         composable(Routes.HOME) {
             val context = LocalContext.current
             val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                uri?.let { navController.navigate(Routes.feature(displayName(context, it))) }
+                uri?.let { navController.navigate(Routes.feature(displayName(context, it), it.toString())) }
             }
             HomeScreen(
                 recents = emptyList(),
@@ -67,7 +67,7 @@ fun VoelaNavHost() {
                 onBack = navController::popBackStack,
                 onUrlChange = viewModel::onUrlChange,
                 onExtract = viewModel::onExtract,
-                onContinue = { navController.navigate(Routes.feature("Extracted Audio")) },
+                onContinue = { state.result?.let { navController.navigate(Routes.feature(it.title, it.localPath)) } },
                 onClearResult = viewModel::onClearResult,
                 onPlayPause = viewModel::onPlayPause,
                 onSeek = viewModel::onSeek,
@@ -80,10 +80,18 @@ fun VoelaNavHost() {
         composable(Routes.LIBRARY) {
             PlaceholderScreen(title = "Library", onBack = navController::popBackStack)
         }
-        composable(Routes.FEATURE, arguments = listOf(navArgument("name") { type = NavType.StringType })) { entry ->
+        composable(
+            Routes.FEATURE,
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("source") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            val name = entry.arguments?.getString("name").orEmpty()
+            val source = entry.arguments?.getString("source").orEmpty()
             PlaceholderScreen(
-                title = "Select Feature Screen",
-                subtitle = entry.arguments?.getString("name").orEmpty(),
+                title = name,
+                subtitle = source.substringAfterLast('/'),
                 onBack = navController::popBackStack,
             )
         }
