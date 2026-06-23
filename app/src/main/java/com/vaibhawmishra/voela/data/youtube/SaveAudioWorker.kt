@@ -35,22 +35,37 @@ class SaveAudioWorker(
                 val input = File(inputPath)
                 if (!input.exists()) error("Source audio missing")
 
-                val tmpDir = File(applicationContext.cacheDir, "save").apply {
-                    mkdirs()
-                    listFiles()?.forEach { it.delete() }
-                }
-                val output = File(tmpDir, "audio.$extension")
-                val transcoded = when (extension) {
-                    "m4a" -> AudioTranscoder.toAac(applicationContext, input, output)
-                    "wav" -> AudioTranscoder.toWav(input, output)
-                    "mp3" -> Mp3Encoder.encode(input, output, bitrate)
-                    else -> false
-                }
-                if (!transcoded) error("Transcode failed")
-
                 val displayName = "${sanitize(title)}.$extension"
-                if (!MediaStoreSaver.save(applicationContext, output, displayName, mime)) error("Save failed")
-                output.delete()
+                val alreadyAac = input.extension.equals("m4a", ignoreCase = true) ||
+                    input.extension.equals("mp4", ignoreCase = true)
+
+                if (extension == "m4a" && alreadyAac) {
+                    // Source is already AAC — save it as-is, no re-encoding (instant)
+                    if (!MediaStoreSaver.save(applicationContext, input, displayName, mime)) error("Save failed")
+                } else {
+                    val tmpDir = File(applicationContext.cacheDir, "save").apply {
+                        mkdirs()
+                        listFiles()?.forEach { it.delete() }
+                    }
+                    val output = File(tmpDir, "audio.$extension")
+                    var lastPercent = -1
+                    val onProgress = { percent: Int ->
+                        if (percent != lastPercent) {
+                            lastPercent = percent
+                            setProgressAsync(workDataOf(Extraction.KEY_PROGRESS to percent))
+                            notifications.updateSaving(percent)
+                        }
+                    }
+                    val transcoded = when (extension) {
+                        "m4a" -> AudioTranscoder.toAac(applicationContext, input, output)
+                        "wav" -> AudioTranscoder.toWav(input, output, onProgress)
+                        "mp3" -> Mp3Encoder.encode(input, output, bitrate, onProgress)
+                        else -> false
+                    }
+                    if (!transcoded) error("Transcode failed")
+                    if (!MediaStoreSaver.save(applicationContext, output, displayName, mime)) error("Save failed")
+                    output.delete()
+                }
 
                 notifications.showSaved(displayName)
                 Result.success(workDataOf(Extraction.KEY_SAVED_NAME to displayName))

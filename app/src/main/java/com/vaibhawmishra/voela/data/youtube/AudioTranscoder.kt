@@ -57,7 +57,7 @@ object AudioTranscoder {
         }
 
     // Decode to 16-bit PCM and wrap it in a WAV container (no encoder needed)
-    fun toWav(input: File, output: File): Boolean {
+    fun toWav(input: File, output: File, onProgress: (Int) -> Unit = {}): Boolean {
         val extractor = MediaExtractor()
         return try {
             extractor.setDataSource(input.absolutePath)
@@ -66,6 +66,7 @@ object AudioTranscoder {
             } ?: return false
             extractor.selectTrack(track)
             val format = extractor.getTrackFormat(track)
+            val durationUs = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0L
             val codec = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME)!!)
             codec.configure(format, null, null, 0)
             codec.start()
@@ -76,6 +77,8 @@ object AudioTranscoder {
                 var pcmBytes = 0L
                 var sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
                 var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+                var buffer = ByteArray(0) // reused across buffers, grown on demand
+                var lastPercent = -1
 
                 val info = MediaCodec.BufferInfo()
                 var inputDone = false
@@ -90,6 +93,10 @@ object AudioTranscoder {
                                 inputDone = true
                             } else {
                                 codec.queueInputBuffer(inIndex, 0, size, extractor.sampleTime, 0)
+                                if (durationUs > 0) {
+                                    val percent = (extractor.sampleTime * 100 / durationUs).toInt().coerceIn(0, 99)
+                                    if (percent != lastPercent) { lastPercent = percent; onProgress(percent) }
+                                }
                                 extractor.advance()
                             }
                         }
@@ -100,9 +107,9 @@ object AudioTranscoder {
                             val buf = codec.getOutputBuffer(outIndex)!!
                             buf.position(info.offset)
                             buf.limit(info.offset + info.size)
-                            val bytes = ByteArray(info.size)
-                            buf.get(bytes)
-                            raf.write(bytes)
+                            if (buffer.size < info.size) buffer = ByteArray(info.size)
+                            buf.get(buffer, 0, info.size)
+                            raf.write(buffer, 0, info.size)
                             pcmBytes += info.size
                         }
                         codec.releaseOutputBuffer(outIndex, false)
@@ -117,6 +124,7 @@ object AudioTranscoder {
                 codec.release()
                 writeWavHeader(raf, pcmBytes, sampleRate, channels)
             }
+            onProgress(100)
             output.length() > 44
         } catch (t: Throwable) {
             false

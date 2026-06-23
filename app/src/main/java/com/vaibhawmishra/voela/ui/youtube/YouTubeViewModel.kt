@@ -98,7 +98,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
             .build()
         saveInitiated = true
         repository.startSave(data)
-        _uiState.update { it.copy(isSaving = true, savedLabel = null) }
+        _uiState.update { it.copy(isSaving = true, saveProgress = 0, savedLabel = null) }
     }
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
@@ -114,8 +114,11 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
 
     private fun applySaveInfo(info: WorkInfo?) {
         when (info?.state) {
-            WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED, WorkInfo.State.RUNNING ->
-                _uiState.update { it.copy(isSaving = true) }
+            WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED ->
+                _uiState.update { it.copy(isSaving = true, saveProgress = 0) }
+
+            WorkInfo.State.RUNNING ->
+                _uiState.update { it.copy(isSaving = true, saveProgress = info.progress.getInt(Extraction.KEY_PROGRESS, it.saveProgress)) }
 
             WorkInfo.State.SUCCEEDED -> if (saveInitiated) {
                 saveInitiated = false

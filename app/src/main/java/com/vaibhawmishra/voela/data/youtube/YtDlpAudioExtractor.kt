@@ -30,7 +30,8 @@ class YtDlpAudioExtractor(private val context: Context) : AudioExtractor {
         outputDir.listFiles()?.forEach { it.delete() } // one extraction at a time
 
         val request = YoutubeDLRequest(url).apply {
-            addOption("-f", "bestaudio")
+            // Prefer M4A/AAC so it can be saved without re-encoding (and decodes faster than Opus)
+            addOption("-f", "bestaudio[ext=m4a]/bestaudio")
             addOption("--no-playlist")
             addOption("--write-info-json")
             addOption("-N", 4) // parallel fragments speed up the download

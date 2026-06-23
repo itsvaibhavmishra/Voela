@@ -31,7 +31,7 @@ object MediaStoreSaver {
             put(MediaStore.Audio.Media.IS_PENDING, 1)
         }
         val uri = resolver.insert(collection, values) ?: return false
-        resolver.openOutputStream(uri)?.use { out -> source.inputStream().use { it.copyTo(out) } } ?: return false
+        resolver.openOutputStream(uri)?.use { out -> source.inputStream().use { it.copyTo(out, 256 * 1024) } } ?: return false
         values.clear()
         values.put(MediaStore.Audio.Media.IS_PENDING, 0)
         resolver.update(uri, values, null, null)

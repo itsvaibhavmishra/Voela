@@ -150,6 +150,7 @@ fun YouTubeUrlScreen(
                 isPlaying = uiState.isPlaying,
                 playbackProgress = uiState.playbackProgress,
                 isSaving = uiState.isSaving,
+                saveProgress = uiState.saveProgress,
                 savedLabel = uiState.savedLabel,
                 onExtract = extractAction,
                 onContinue = onContinue,
@@ -217,6 +218,7 @@ private fun LinkCard(
     isPlaying: Boolean,
     playbackProgress: Float,
     isSaving: Boolean,
+    saveProgress: Int,
     savedLabel: String?,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
@@ -303,10 +305,14 @@ private fun LinkCard(
                 }
             }
             Spacer(Modifier.height(10.dp))
-            ResultRow(result, isPlaying, playbackProgress, isSaving, onPlayPause, onSeek, onDownload)
+            ResultRow(result, isPlaying, playbackProgress, isSaving, saveProgress, onPlayPause, onSeek, onDownload)
             if (isSaving) {
                 Spacer(Modifier.height(8.dp))
-                Text(stringResource(R.string.saving_audio), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+                Text(
+                    if (saveProgress > 0) stringResource(R.string.saving_audio_progress, saveProgress) else stringResource(R.string.saving_audio),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                )
             } else if (savedLabel != null) {
                 Spacer(Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -352,6 +358,7 @@ private fun ResultRow(
     isPlaying: Boolean,
     progress: Float,
     isSaving: Boolean,
+    saveProgress: Int,
     onPlayPause: () -> Unit,
     onSeek: (Float) -> Unit,
     onDownload: () -> Unit,
@@ -388,7 +395,11 @@ private fun ResultRow(
         Spacer(Modifier.width(10.dp))
         if (isSaving) {
             Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = DownloadGreen)
+                if (saveProgress > 0) {
+                    CircularProgressIndicator(progress = { saveProgress / 100f }, modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = DownloadGreen)
+                } else {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = DownloadGreen)
+                }
             }
         } else {
             IconButton(onClick = onDownload) {

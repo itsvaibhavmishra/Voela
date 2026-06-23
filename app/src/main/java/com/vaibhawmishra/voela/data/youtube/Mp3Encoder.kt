@@ -14,7 +14,7 @@ import java.nio.ByteOrder
 // encoder). Decodes to PCM via MediaCodec and feeds it straight to LAME — no re-download.
 object Mp3Encoder {
 
-    fun encode(input: File, output: File, bitrate: String?): Boolean {
+    fun encode(input: File, output: File, bitrate: String?, onProgress: (Int) -> Unit = {}): Boolean {
         val kbps = bitrate?.removeSuffix("k")?.removeSuffix("K")?.toIntOrNull() ?: 320
         val extractor = MediaExtractor()
         var lame: AndroidLame? = null
@@ -25,13 +25,16 @@ object Mp3Encoder {
             } ?: return false
             extractor.selectTrack(track)
             val format = extractor.getTrackFormat(track)
+            val durationUs = if (format.containsKey(MediaFormat.KEY_DURATION)) format.getLong(MediaFormat.KEY_DURATION) else 0L
             val codec = MediaCodec.createDecoderByType(format.getString(MediaFormat.KEY_MIME)!!)
             codec.configure(format, null, null, 0)
             codec.start()
 
             val mp3Buf = ByteArray(32 * 1024)
+            var shorts = ShortArray(0) // reused across buffers, grown on demand
             var channels = 2
-            FileOutputStream(output).use { out ->
+            var lastPercent = -1
+            FileOutputStream(output).buffered(64 * 1024).use { out ->
                 val info = MediaCodec.BufferInfo()
                 var inputDone = false
                 var outputDone = false
@@ -45,6 +48,10 @@ object Mp3Encoder {
                                 inputDone = true
                             } else {
                                 codec.queueInputBuffer(inIndex, 0, size, extractor.sampleTime, 0)
+                                if (durationUs > 0) {
+                                    val percent = (extractor.sampleTime * 100 / durationUs).toInt().coerceIn(0, 99)
+                                    if (percent != lastPercent) { lastPercent = percent; onProgress(percent) }
+                                }
                                 extractor.advance()
                             }
                         }
@@ -67,9 +74,10 @@ object Mp3Encoder {
                             val buf = codec.getOutputBuffer(outIndex)!!
                             buf.position(info.offset)
                             buf.limit(info.offset + info.size)
-                            val shorts = ShortArray(info.size / 2)
-                            buf.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts)
-                            val samplesPerChannel = shorts.size / channels
+                            val needed = info.size / 2
+                            if (shorts.size < needed) shorts = ShortArray(needed)
+                            buf.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer().get(shorts, 0, needed)
+                            val samplesPerChannel = needed / channels
                             val encoded = lame!!.encodeBufferInterLeaved(shorts, samplesPerChannel, mp3Buf)
                             if (encoded > 0) out.write(mp3Buf, 0, encoded)
                         }
@@ -82,6 +90,7 @@ object Mp3Encoder {
             lame?.close()
             codec.stop()
             codec.release()
+            onProgress(100)
             output.length() > 0
         } catch (t: Throwable) {
             Log.e("Mp3Encoder", "encode failed", t)
