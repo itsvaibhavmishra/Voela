@@ -10,6 +10,8 @@ android {
             minorApiLevel = 1
         }
     }
+    // NDK r27+ produces 16KB-aligned shared libraries by default (needed for our 16KB-page targets)
+    ndkVersion = "28.2.13676358"
 
     defaultConfig {
         applicationId = "com.vaibhawmishra.voela"
@@ -19,6 +21,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Build the bundled LAME (libmp3lame) for MP3 export — see src/main/jni
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path = file("src/main/jni/Android.mk")
+        }
     }
 
     buildTypes {

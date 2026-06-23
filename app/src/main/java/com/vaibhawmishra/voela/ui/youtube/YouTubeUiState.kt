@@ -22,9 +22,10 @@ data class DownloadOption(
 )
 
 val downloadOptions = listOf(
+    DownloadOption("MP3 · 320 kbps", "High quality", "libmp3lame", "320k", "audio/mpeg", "mp3"),
+    DownloadOption("MP3 · 192 kbps", "Standard", "libmp3lame", "192k", "audio/mpeg", "mp3"),
     DownloadOption("M4A · AAC", "Compressed · compatible", "aac", "256k", "audio/mp4", "m4a"),
     DownloadOption("WAV · Lossless", "Uncompressed", "pcm_s16le", null, "audio/x-wav", "wav"),
-    // MP3 options return once the LAME encoder is wired in (NDK build)
 )
 
 data class YouTubeUiState(
