@@ -24,3 +24,6 @@ val VocalsAmber = Color(0xFFF59E0B)
 val InstrumentalTeal = Color(0xFF2DD4BF)
 val RemainderYellow = Color(0xFFD4C24A)
 val Warning = Color(0xFFF87171)
+
+// Brand red for YouTube affordances
+val YouTubeRed = Color(0xFFF0312E)

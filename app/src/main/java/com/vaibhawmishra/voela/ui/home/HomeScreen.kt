@@ -25,15 +25,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.DeleteOutline
-import androidx.compose.material.icons.rounded.Folder
-import androidx.compose.material.icons.rounded.FolderOpen
-import androidx.compose.material.icons.rounded.GraphicEq
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.SmartDisplay
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -98,14 +98,14 @@ fun HomeScreen(
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Rounded.Folder,
+                icon = Icons.Outlined.Folder,
                 title = stringResource(R.string.choose_audio_file),
                 description = stringResource(R.string.choose_audio_file_desc),
                 onClick = onChooseFile,
             )
             ActionCard(
                 modifier = Modifier.weight(1f),
-                icon = Icons.Rounded.SmartDisplay,
+                icon = Icons.Outlined.SmartDisplay,
                 title = stringResource(R.string.youtube_url),
                 description = stringResource(R.string.youtube_url_desc),
                 onClick = onYouTubeUrl,
@@ -139,7 +139,7 @@ private fun TopBar(onOpenLibrary: () -> Unit) {
         )
         Spacer(Modifier.weight(1f))
         IconButton(onClick = onOpenLibrary) {
-            Icon(Icons.Rounded.FolderOpen, stringResource(R.string.cd_library), tint = TextSecondary)
+            Icon(Icons.Outlined.FolderOpen, stringResource(R.string.cd_library), tint = TextSecondary)
         }
     }
 }
@@ -185,7 +185,7 @@ private fun ActionCard(
                 Modifier.size(40.dp).clip(CircleShape).border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, tint = Purple, modifier = Modifier.size(22.dp))
+                Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = Purple, modifier = Modifier.size(22.dp))
             }
         }
     }
@@ -203,7 +203,7 @@ private fun RecentsHeader(showViewAll: Boolean, onViewAll: () -> Unit) {
             ) {
                 Text(stringResource(R.string.view_all), style = MaterialTheme.typography.labelLarge, color = TextSecondary)
                 Spacer(Modifier.width(4.dp))
-                Icon(Icons.AutoMirrored.Rounded.ArrowForward, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+                Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = TextSecondary, modifier = Modifier.size(16.dp))
             }
         }
     }
@@ -262,7 +262,7 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
         Box {
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
-                    Icons.Rounded.MoreVert,
+                    Icons.Outlined.MoreVert,
                     stringResource(R.string.cd_more_options),
                     tint = TextSecondary,
                     modifier = Modifier.size(20.dp),
@@ -278,15 +278,15 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
                 tonalElevation = 0.dp,
                 shadowElevation = 12.dp,
             ) {
-                RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Rounded.OpenInNew, Purple, TextPrimary) {
+                RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Outlined.OpenInNew, Purple, TextPrimary) {
                     menuExpanded = false
                     onClick()
                 }
-                RecentMenuItem(stringResource(R.string.action_share), Icons.Rounded.Share, ShareBlue, TextPrimary) {
+                RecentMenuItem(stringResource(R.string.action_share), Icons.Outlined.Share, ShareBlue, TextPrimary) {
                     menuExpanded = false
                 }
                 HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = Outline)
-                RecentMenuItem(stringResource(R.string.action_delete), Icons.Rounded.DeleteOutline, Warning, Warning) {
+                RecentMenuItem(stringResource(R.string.action_delete), Icons.Outlined.Delete, Warning, Warning) {
                     menuExpanded = false
                 }
             }
@@ -330,7 +330,7 @@ private fun EmptyRecents(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Rounded.GraphicEq, null, tint = TextSecondary.copy(alpha = 0.5f), modifier = Modifier.size(40.dp))
+        Icon(Icons.Outlined.GraphicEq, null, tint = TextSecondary.copy(alpha = 0.5f), modifier = Modifier.size(40.dp))
         Spacer(Modifier.height(12.dp))
         Text(stringResource(R.string.recents_empty_title), style = MaterialTheme.typography.titleMedium, color = TextPrimary)
         Spacer(Modifier.height(4.dp))

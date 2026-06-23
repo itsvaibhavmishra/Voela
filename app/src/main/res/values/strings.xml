@@ -16,8 +16,37 @@
     <string name="action_share">Share</string>
     <string name="action_delete">Delete</string>
 
+    <!-- YouTube URL screen -->
+    <string name="youtube_title">YouTube URL</string>
+    <string name="youtube_subtitle">Paste a YouTube link to extract audio</string>
+    <string name="youtube_link_label">YouTube Link</string>
+    <string name="youtube_url_hint">https://www.youtube.com/watch?v=…</string>
+    <string name="youtube_support_note">We support videos, shorts, and playlists.</string>
+    <string name="extract_audio">Extract Audio</string>
+    <string name="download_title">Download audio</string>
+    <string name="download_subtitle">Choose a format and quality</string>
+    <string name="extracting_audio">Extracting audio…</string>
+    <string name="continue_action">Continue</string>
+    <string name="how_it_works">How it works</string>
+    <string name="hiw_1_title">1. Paste YouTube link</string>
+    <string name="hiw_1_desc">Add any YouTube video, short or playlist link.</string>
+    <string name="hiw_2_title">2. Extract audio</string>
+    <string name="hiw_2_desc">We\'ll download and convert the audio securely.</string>
+    <string name="hiw_3_title">3. Choose what\'s next</string>
+    <string name="hiw_3_desc">Trim, split vocals, and get your results.</string>
+    <string name="recent_links">Recent Links</string>
+    <string name="clear_all">Clear All</string>
+    <string name="recent_links_empty">Links you extract will appear here</string>
+    <string name="tos_title">We respect YouTube\'s Terms of Service.</string>
+    <string name="tos_desc">Only download content you have the right to use.</string>
+
     <!-- Content descriptions -->
     <string name="cd_logo">Voela</string>
     <string name="cd_library">Library</string>
     <string name="cd_more_options">More options</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_clear">Clear</string>
+    <string name="cd_play">Play</string>
+    <string name="cd_download">Download</string>
+    <string name="cd_open_link">Open link</string>
 </resources>

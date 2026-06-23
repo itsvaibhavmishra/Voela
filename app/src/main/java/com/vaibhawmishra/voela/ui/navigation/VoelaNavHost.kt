@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.youtube.YouTubeUrlScreen
 
 private object Routes {
     const val HOME = "home"
@@ -55,7 +56,10 @@ fun VoelaNavHost() {
             )
         }
         composable(Routes.YOUTUBE) {
-            PlaceholderScreen(title = "YouTube URL", onBack = navController::popBackStack)
+            YouTubeUrlScreen(
+                onBack = navController::popBackStack,
+                onContinue = { navController.navigate(Routes.feature("Extracted Audio")) },
+            )
         }
         composable(Routes.LIBRARY) {
             PlaceholderScreen(title = "Library", onBack = navController::popBackStack)
