@@ -43,9 +43,13 @@ class YtDlpAudioExtractor(private val context: Context) : AudioExtractor {
 
         val files = outputDir.listFiles().orEmpty()
         val audio = files.firstOrNull { !it.name.endsWith(".info.json") }
-        val title = files.firstOrNull { it.name.endsWith(".info.json") }
-            ?.let { runCatching { JSONObject(it.readText()).optString("title") }.getOrNull() }
-            ?.takeIf { it.isNotBlank() } ?: "Audio"
-        return ExtractedAudioResult(title = title, localPath = audio?.absolutePath.orEmpty())
+        val info = files.firstOrNull { it.name.endsWith(".info.json") }
+            ?.let { runCatching { JSONObject(it.readText()) }.getOrNull() }
+        val title = info?.optString("title")?.takeIf { it.isNotBlank() } ?: "Audio"
+        return ExtractedAudioResult(
+            title = title,
+            localPath = audio?.absolutePath.orEmpty(),
+            durationSeconds = info?.optInt("duration") ?: 0,
+        )
     }
 }

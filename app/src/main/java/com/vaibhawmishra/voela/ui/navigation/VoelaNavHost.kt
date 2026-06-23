@@ -74,7 +74,7 @@ fun VoelaNavHost() {
                 onDownload = viewModel::onDownload,
                 onMessageShown = viewModel::onMessageShown,
                 onClearRecents = viewModel::onClearRecents,
-                onOpenLink = {},
+                onOpenLink = viewModel::onOpenLink,
             )
         }
         composable(Routes.LIBRARY) {

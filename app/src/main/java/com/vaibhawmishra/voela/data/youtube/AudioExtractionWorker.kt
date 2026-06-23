@@ -32,6 +32,7 @@ class AudioExtractionWorker(
                     Extraction.KEY_OUTPUT_PATH to result.localPath,
                     Extraction.KEY_TITLE to result.title,
                     Extraction.KEY_SOURCE_URL to url,
+                    Extraction.KEY_DURATION to result.durationSeconds,
                 ),
             )
         } catch (t: Throwable) {

@@ -15,6 +15,7 @@ import androidx.work.WorkInfo
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.data.youtube.Extraction
 import com.vaibhawmishra.voela.data.youtube.ExtractionRepository
+import com.vaibhawmishra.voela.data.youtube.RecentLinksStore
 import com.vaibhawmishra.voela.data.youtube.WaveformGenerator
 import com.vaibhawmishra.voela.ui.components.waveformBars
 import java.io.File
@@ -29,13 +30,15 @@ import kotlinx.coroutines.launch
 class YouTubeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = ExtractionRepository(application)
+    private val recentLinksStore = RecentLinksStore(application)
     private val player = ExoPlayer.Builder(application).build()
 
-    private val _uiState = MutableStateFlow(YouTubeUiState(recentLinks = initialRecentLinks))
+    private val _uiState = MutableStateFlow(YouTubeUiState())
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
 
     private var positionJob: Job? = null
     private var saveInitiated = false
+    private var extractInitiated = false
 
     init {
         player.addListener(object : Player.Listener {
@@ -57,6 +60,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         })
         viewModelScope.launch { repository.workInfo.collect(::applyWorkInfo) }
         viewModelScope.launch { repository.saveWorkInfo.collect(::applySaveInfo) }
+        viewModelScope.launch { recentLinksStore.recents.collect { links -> _uiState.update { it.copy(recentLinks = links) } } }
     }
 
     fun onUrlChange(url: String) = _uiState.update { it.copy(url = url) }
@@ -65,6 +69,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         val url = _uiState.value.url
         if (url.isBlank() || _uiState.value.status == ExtractionStatus.Processing) return
         _uiState.update { it.copy(status = ExtractionStatus.Processing, progress = 0, result = null, savedLabel = null) }
+        extractInitiated = true
         repository.start(url)
     }
 
@@ -103,7 +108,11 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
 
     fun onMessageShown() = _uiState.update { it.copy(message = null) }
 
-    fun onClearRecents() = _uiState.update { it.copy(recentLinks = emptyList()) }
+    fun onOpenLink(link: RecentLink) = onUrlChange(link.url)
+
+    fun onClearRecents() {
+        viewModelScope.launch { recentLinksStore.clear() }
+    }
 
     fun onClearResult() {
         player.stop()
@@ -170,12 +179,20 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
             WorkInfo.State.SUCCEEDED -> {
                 val title = info.outputData.getString(Extraction.KEY_TITLE).orEmpty()
                 val path = info.outputData.getString(Extraction.KEY_OUTPUT_PATH).orEmpty()
+                val sourceUrl = info.outputData.getString(Extraction.KEY_SOURCE_URL).orEmpty()
+                // Persist only a freshly-completed extraction — re-attaching to a finished job
+                // (e.g. on app relaunch) must not resurrect a recent the user cleared
+                if (extractInitiated && sourceUrl.isNotBlank()) {
+                    extractInitiated = false
+                    val duration = formatDuration(info.outputData.getInt(Extraction.KEY_DURATION, 0))
+                    viewModelScope.launch { recentLinksStore.add(RecentLink(title, duration, sourceUrl)) }
+                }
                 // Show Done immediately with a placeholder; the real waveform is decoded async
                 _uiState.update {
                     it.copy(
                         status = ExtractionStatus.Done,
                         progress = 100,
-                        result = ExtractedAudio(title, path, waveformBars(path.hashCode()), sourceUrl = info.outputData.getString(Extraction.KEY_SOURCE_URL).orEmpty()),
+                        result = ExtractedAudio(title, path, waveformBars(path.hashCode()), sourceUrl = sourceUrl),
                         isPlaying = false,
                         positionMs = 0,
                         durationMs = 0,
@@ -188,11 +205,22 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
                 }
             }
 
-            WorkInfo.State.FAILED, WorkInfo.State.CANCELLED ->
+            WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
+                extractInitiated = false
                 _uiState.update { it.copy(status = ExtractionStatus.Idle, progress = 0) }
+            }
 
             null -> Unit
         }
+    }
+
+    // mm:ss (or h:mm:ss for long videos); blank when unknown
+    private fun formatDuration(seconds: Int): String {
+        if (seconds <= 0) return ""
+        val h = seconds / 3600
+        val m = (seconds % 3600) / 60
+        val s = seconds % 60
+        return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
     }
 
     override fun onCleared() {

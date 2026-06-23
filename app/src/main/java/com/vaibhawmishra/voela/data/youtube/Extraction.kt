@@ -9,6 +9,7 @@ object Extraction {
     const val KEY_OUTPUT_PATH = "output_path"
     const val KEY_TITLE = "title"
     const val KEY_SOURCE_URL = "source_url"
+    const val KEY_DURATION = "duration"
     const val KEY_ERROR = "error"
 
     // Download/save job (transcode a local file with the bundled ffmpeg)

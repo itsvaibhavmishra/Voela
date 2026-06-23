@@ -44,10 +44,3 @@ data class YouTubeUiState(
 ) {
     val playbackProgress: Float get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
 }
-
-// Seed shown until recents are persisted (DataStore) in a later phase
-internal val initialRecentLinks = listOf(
-    RecentLink("Lofi study mix — 1 hour", "1:02:14", "https://youtu.be/aaaa1111"),
-    RecentLink("Acoustic guitar session", "3:24", "https://youtu.be/bbbb2222"),
-    RecentLink("City ambience for focus", "4:20", "https://youtu.be/cccc3333"),
-)

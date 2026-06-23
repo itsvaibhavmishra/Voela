@@ -9,4 +9,5 @@ interface AudioExtractor {
 data class ExtractedAudioResult(
     val title: String,
     val localPath: String,
+    val durationSeconds: Int = 0,
 )
