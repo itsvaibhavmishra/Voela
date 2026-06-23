@@ -71,6 +71,8 @@ fun VoelaNavHost() {
                 onClearResult = viewModel::onClearResult,
                 onPlayPause = viewModel::onPlayPause,
                 onSeek = viewModel::onSeek,
+                onDownload = viewModel::onDownload,
+                onMessageShown = viewModel::onMessageShown,
                 onClearRecents = viewModel::onClearRecents,
                 onOpenLink = {},
             )

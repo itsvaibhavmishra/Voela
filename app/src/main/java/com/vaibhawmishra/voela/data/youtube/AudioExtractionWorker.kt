@@ -31,6 +31,7 @@ class AudioExtractionWorker(
                 workDataOf(
                     Extraction.KEY_OUTPUT_PATH to result.localPath,
                     Extraction.KEY_TITLE to result.title,
+                    Extraction.KEY_SOURCE_URL to url,
                 ),
             )
         } catch (t: Throwable) {

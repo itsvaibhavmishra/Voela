@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.youtubedl.android.library)
     implementation(libs.youtubedl.android.ffmpeg)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.transformer)
+    implementation(libs.androidx.media3.common)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

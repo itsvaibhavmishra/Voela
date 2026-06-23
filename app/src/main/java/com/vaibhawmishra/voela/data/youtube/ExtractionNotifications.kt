@@ -34,39 +34,56 @@ class ExtractionNotifications(private val context: Context) {
     }
 
     fun foregroundInfo(progress: Int): ForegroundInfo =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            ForegroundInfo(PROGRESS_ID, progressNotification(progress), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
-        } else {
-            ForegroundInfo(PROGRESS_ID, progressNotification(progress))
-        }
+        foreground(PROGRESS_ID, context.getString(R.string.notif_extracting_title), progress)
+
+    fun savingForegroundInfo(progress: Int): ForegroundInfo =
+        foreground(SAVE_PROGRESS_ID, context.getString(R.string.notif_saving_title), progress)
 
     @SuppressLint("MissingPermission") // guarded by hasPermission()
     fun updateProgress(progress: Int) {
-        if (hasPermission()) manager.notify(PROGRESS_ID, progressNotification(progress))
+        if (hasPermission()) manager.notify(PROGRESS_ID, progressNotification(context.getString(R.string.notif_extracting_title), progress))
     }
 
     @SuppressLint("MissingPermission") // guarded by hasPermission()
-    fun showComplete(title: String) {
+    fun updateSaving(progress: Int) {
+        if (hasPermission()) manager.notify(SAVE_PROGRESS_ID, progressNotification(context.getString(R.string.notif_saving_title), progress))
+    }
+
+    fun showComplete(title: String) =
+        showDone(DONE_ID, context.getString(R.string.notif_ready_title), title)
+
+    fun showSaved(name: String) =
+        showDone(SAVE_DONE_ID, context.getString(R.string.notif_saved_title), name)
+
+    private fun foreground(id: Int, title: String, progress: Int): ForegroundInfo =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(id, progressNotification(title, progress), ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(id, progressNotification(title, progress))
+        }
+
+    @SuppressLint("MissingPermission") // guarded by hasPermission()
+    private fun showDone(id: Int, title: String, text: String) {
         if (!hasPermission()) return
         val intent = Intent(context, MainActivity::class.java).apply { flags = Intent.FLAG_ACTIVITY_CLEAR_TOP }
         val pending = PendingIntent.getActivity(
-            context, 0, intent,
+            context, id, intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_DONE)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notif_ready_title))
-            .setContentText(title)
+            .setContentTitle(title)
+            .setContentText(text)
             .setContentIntent(pending)
             .setAutoCancel(true)
             .build()
-        manager.notify(DONE_ID, notification)
+        manager.notify(id, notification)
     }
 
-    private fun progressNotification(progress: Int): Notification =
+    private fun progressNotification(title: String, progress: Int): Notification =
         NotificationCompat.Builder(context, CHANNEL_PROGRESS)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.notif_extracting_title))
+            .setContentTitle(title)
             .setContentText("$progress%")
             .setProgress(100, progress, progress <= 0)
             .setOngoing(true)
@@ -82,5 +99,7 @@ class ExtractionNotifications(private val context: Context) {
         const val CHANNEL_DONE = "voela_results"
         const val PROGRESS_ID = 1001
         const val DONE_ID = 1002
+        const val SAVE_PROGRESS_ID = 1003
+        const val SAVE_DONE_ID = 1004
     }
 }

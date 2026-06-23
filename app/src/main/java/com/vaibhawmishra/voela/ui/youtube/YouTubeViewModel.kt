@@ -10,7 +10,9 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.work.Data
 import androidx.work.WorkInfo
+import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.data.youtube.Extraction
 import com.vaibhawmishra.voela.data.youtube.ExtractionRepository
 import com.vaibhawmishra.voela.data.youtube.WaveformGenerator
@@ -33,6 +35,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
 
     private var positionJob: Job? = null
+    private var saveInitiated = false
 
     init {
         player.addListener(object : Player.Listener {
@@ -53,6 +56,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
             }
         })
         viewModelScope.launch { repository.workInfo.collect(::applyWorkInfo) }
+        viewModelScope.launch { repository.saveWorkInfo.collect(::applySaveInfo) }
     }
 
     fun onUrlChange(url: String) = _uiState.update { it.copy(url = url) }
@@ -81,6 +85,24 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    fun onDownload(option: DownloadOption) {
+        val result = _uiState.value.result ?: return
+        if (result.localPath.isBlank()) return
+        val data = Data.Builder()
+            .putString(Extraction.KEY_INPUT_PATH, result.localPath)
+            .putString(Extraction.KEY_CODEC, option.codec)
+            .putString(Extraction.KEY_MIME, option.mimeType)
+            .putString(Extraction.KEY_EXTENSION, option.extension)
+            .putString(Extraction.KEY_TITLE, result.title)
+            .apply { option.bitrate?.let { putString(Extraction.KEY_BITRATE, it) } }
+            .build()
+        saveInitiated = true
+        repository.startSave(data)
+        _uiState.update { it.copy(isSaving = true) }
+    }
+
+    fun onMessageShown() = _uiState.update { it.copy(message = null) }
+
     fun onClearRecents() = _uiState.update { it.copy(recentLinks = emptyList()) }
 
     fun onClearResult() {
@@ -88,6 +110,29 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         player.clearMediaItems()
         repository.clearFinished()
         _uiState.update { it.copy(status = ExtractionStatus.Idle, progress = 0, result = null, isPlaying = false, positionMs = 0, durationMs = 0) }
+    }
+
+    private fun applySaveInfo(info: WorkInfo?) {
+        when (info?.state) {
+            WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED, WorkInfo.State.RUNNING ->
+                _uiState.update { it.copy(isSaving = true) }
+
+            WorkInfo.State.SUCCEEDED -> if (saveInitiated) {
+                saveInitiated = false
+                _uiState.update { it.copy(isSaving = false, message = getApplication<Application>().getString(R.string.saved_to_music)) }
+            } else {
+                _uiState.update { it.copy(isSaving = false) }
+            }
+
+            WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> if (saveInitiated) {
+                saveInitiated = false
+                _uiState.update { it.copy(isSaving = false, message = getApplication<Application>().getString(R.string.save_failed)) }
+            } else {
+                _uiState.update { it.copy(isSaving = false) }
+            }
+
+            null -> Unit
+        }
     }
 
     // Decode the real waveform off the worker so Done isn't blocked; swap it in when ready
@@ -126,7 +171,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
                     it.copy(
                         status = ExtractionStatus.Done,
                         progress = 100,
-                        result = ExtractedAudio(title, path, waveformBars(path.hashCode())),
+                        result = ExtractedAudio(title, path, waveformBars(path.hashCode()), sourceUrl = info.outputData.getString(Extraction.KEY_SOURCE_URL).orEmpty()),
                         isPlaying = false,
                         positionMs = 0,
                         durationMs = 0,

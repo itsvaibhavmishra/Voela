@@ -49,9 +49,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -91,11 +94,20 @@ fun YouTubeUrlScreen(
     onClearResult: () -> Unit,
     onPlayPause: () -> Unit,
     onSeek: (Float) -> Unit,
+    onDownload: (DownloadOption) -> Unit,
+    onMessageShown: () -> Unit,
     onClearRecents: () -> Unit,
     onOpenLink: (RecentLink) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showDownloadSheet by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            snackbarHostState.showSnackbar(it)
+            onMessageShown()
+        }
+    }
 
     // Ask for notification permission (13+) so extraction progress/completion can show, then extract
     val context = LocalContext.current
@@ -109,13 +121,13 @@ fun YouTubeUrlScreen(
         onExtract()
     }
 
-    Column(
-        modifier
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+      Column(
+        Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 20.dp),
-    ) {
+      ) {
         Column(
             Modifier
                 .weight(1f)
@@ -157,10 +169,21 @@ fun YouTubeUrlScreen(
         Spacer(Modifier.height(16.dp))
         FooterNote()
         Spacer(Modifier.height(8.dp))
+      }
+      SnackbarHost(
+          snackbarHostState,
+          Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.systemBars).padding(16.dp),
+      )
     }
 
     if (showDownloadSheet) {
-        DownloadOptionsSheet(onDismiss = { showDownloadSheet = false }, onSelect = { showDownloadSheet = false })
+        DownloadOptionsSheet(
+            onDismiss = { showDownloadSheet = false },
+            onSelect = { option ->
+                showDownloadSheet = false
+                onDownload(option)
+            },
+        )
     }
 }
 
@@ -527,20 +550,10 @@ private fun DownloadOptionRow(option: DownloadOption, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text("${option.format} · ${option.quality}", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+            Text(option.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
             Spacer(Modifier.height(2.dp))
-            Text(option.size, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+            Text(option.subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
         Icon(Icons.Outlined.FileDownload, stringResource(R.string.cd_download), tint = DownloadGreen, modifier = Modifier.size(22.dp))
     }
 }
-
-// format is the audio file type shown to the user (MP3, M4A, WAV)
-data class DownloadOption(val format: String, val quality: String, val size: String)
-
-private val downloadOptions = listOf(
-    DownloadOption("MP3", "320 kbps · High", "~9 MB"),
-    DownloadOption("MP3", "192 kbps · Standard", "~5.4 MB"),
-    DownloadOption("M4A", "256 kbps · AAC", "~7.2 MB"),
-    DownloadOption("WAV", "Lossless", "~52 MB"),
-)

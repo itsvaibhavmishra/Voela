@@ -21,12 +21,23 @@ class ExtractionRepository(context: Context) {
     val workInfo: Flow<WorkInfo?> =
         workManager.getWorkInfosForUniqueWorkFlow(Extraction.WORK_NAME).map { it.firstOrNull() }
 
+    val saveWorkInfo: Flow<WorkInfo?> =
+        workManager.getWorkInfosForUniqueWorkFlow(Extraction.SAVE_WORK_NAME).map { it.firstOrNull() }
+
     fun start(url: String) {
         val request = OneTimeWorkRequestBuilder<AudioExtractionWorker>()
             .setInputData(workDataOf(Extraction.KEY_URL to url))
             .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
         workManager.enqueueUniqueWork(Extraction.WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+    }
+
+    fun startSave(data: androidx.work.Data) {
+        val request = OneTimeWorkRequestBuilder<SaveAudioWorker>()
+            .setInputData(data)
+            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
+            .build()
+        workManager.enqueueUniqueWork(Extraction.SAVE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
     }
 
     fun cancel() = workManager.cancelUniqueWork(Extraction.WORK_NAME)

@@ -25,6 +25,8 @@
     <string name="extract_audio">Extract Audio</string>
     <string name="download_title">Download audio</string>
     <string name="download_subtitle">Choose a format and quality</string>
+    <string name="saved_to_music">Saved to Music/Voela</string>
+    <string name="save_failed">Couldn\'t save audio</string>
     <string name="preparing_audio">Preparing…</string>
     <string name="extracting_audio">Extracting audio…</string>
     <string name="continue_action">Continue</string>
@@ -46,6 +48,8 @@
     <string name="notif_channel_done">Downloads &amp; results</string>
     <string name="notif_extracting_title">Extracting audio</string>
     <string name="notif_ready_title">Audio ready</string>
+    <string name="notif_saving_title">Saving audio</string>
+    <string name="notif_saved_title">Saved to Music</string>
 
     <!-- Content descriptions -->
     <string name="cd_logo">Voela</string>
