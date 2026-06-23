@@ -20,6 +20,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
+import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
+import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
 import com.vaibhawmishra.voela.ui.youtube.YouTubeUrlScreen
 import com.vaibhawmishra.voela.ui.youtube.YouTubeViewModel
@@ -29,8 +31,12 @@ private object Routes {
     const val YOUTUBE = "youtube"
     const val LIBRARY = "library"
     const val FEATURE = "feature/{name}/{source}"
+    const val SPLIT_VOCALS = "split_vocals/{name}/{source}"
+    const val SPLIT_AUDIO = "split_audio/{name}/{source}"
     const val SPLIT = "split/{name}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
+    fun splitVocals(name: String, source: String) = "split_vocals/${Uri.encode(name)}/${Uri.encode(source)}"
+    fun splitAudio(name: String, source: String) = "split_audio/${Uri.encode(name)}/${Uri.encode(source)}"
     fun split(name: String) = "split/${Uri.encode(name)}"
 }
 
@@ -89,9 +95,39 @@ fun VoelaNavHost() {
         ) { entry ->
             val name = entry.arguments?.getString("name").orEmpty()
             val source = entry.arguments?.getString("source").orEmpty()
+            val viewModel: SelectFeatureViewModel = viewModel(factory = SelectFeatureViewModel.factory(name, source))
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            SelectFeatureScreen(
+                uiState = state,
+                onBack = navController::popBackStack,
+                onPlayPause = viewModel::onPlayPause,
+                onSplitVocals = { navController.navigate(Routes.splitVocals(name, source)) },
+                onSplitAudio = { navController.navigate(Routes.splitAudio(name, source)) },
+            )
+        }
+        composable(
+            Routes.SPLIT_VOCALS,
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("source") { type = NavType.StringType },
+            ),
+        ) { entry ->
             PlaceholderScreen(
-                title = name,
-                subtitle = source.substringAfterLast('/'),
+                title = "Split Vocals",
+                subtitle = entry.arguments?.getString("name").orEmpty(),
+                onBack = navController::popBackStack,
+            )
+        }
+        composable(
+            Routes.SPLIT_AUDIO,
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("source") { type = NavType.StringType },
+            ),
+        ) { entry ->
+            PlaceholderScreen(
+                title = "Split Audio",
+                subtitle = entry.arguments?.getString("name").orEmpty(),
                 onBack = navController::popBackStack,
             )
         }

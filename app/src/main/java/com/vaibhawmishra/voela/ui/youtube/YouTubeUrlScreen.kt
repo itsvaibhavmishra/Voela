@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,7 +28,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -61,13 +59,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.components.AppHeader
 import com.vaibhawmishra.voela.ui.components.DownloadOption
 import com.vaibhawmishra.voela.ui.components.DownloadOptionsSheet
 import com.vaibhawmishra.voela.ui.components.PlayableWaveform
@@ -132,7 +130,7 @@ fun YouTubeUrlScreen(
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState()),
         ) {
-            Header(onBack)
+            AppHeader(onBack)
             Spacer(Modifier.height(8.dp))
             Text(stringResource(R.string.youtube_title), style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
             Spacer(Modifier.height(4.dp))
@@ -185,24 +183,6 @@ fun YouTubeUrlScreen(
                 onDownload(option)
             },
         )
-    }
-}
-
-@Composable
-private fun Header(onBack: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            painter = painterResource(R.drawable.logo_voela),
-            contentDescription = stringResource(R.string.cd_logo),
-            modifier = Modifier.height(30.dp),
-        )
-        Spacer(Modifier.weight(1f))
-        IconButton(onClick = onBack) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(R.string.cd_back), tint = TextPrimary)
-        }
     }
 }
 

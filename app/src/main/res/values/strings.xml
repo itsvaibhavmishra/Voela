@@ -45,6 +45,16 @@
     <string name="tos_title">We respect YouTube\'s Terms of Service.</string>
     <string name="tos_desc">Only download content you have the right to use.</string>
 
+    <!-- Select Feature screen -->
+    <string name="feature_title">Select a feature</string>
+    <string name="feature_subtitle">What would you like to do with this audio?</string>
+    <string name="split_vocals">Split Vocals</string>
+    <string name="split_vocals_desc">Separate vocals and instrumental from your audio</string>
+    <string name="split_audio">Split Audio</string>
+    <string name="split_audio_desc">Cut your audio into multiple segments</string>
+    <string name="on_device_title">All processing is done on-device.</string>
+    <string name="on_device_desc">Your audio never leaves your phone.</string>
+
     <!-- Notifications -->
     <string name="notif_channel_progress">Audio extraction</string>
     <string name="notif_channel_done">Downloads &amp; results</string>
