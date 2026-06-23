@@ -1,8 +1,10 @@
 package com.vaibhawmishra.voela.data.audio
 
+import android.content.Context
 import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.nio.ByteOrder
@@ -14,11 +16,12 @@ import kotlin.math.abs
 // represents the entire track.
 object WaveformGenerator {
 
-    suspend fun generate(path: String, bars: Int = 56): List<Float> = withContext(Dispatchers.Default) {
-        if (path.isBlank()) return@withContext flat(bars)
+    suspend fun generate(context: Context, source: String, bars: Int = 56): List<Float> = withContext(Dispatchers.Default) {
+        if (source.isBlank()) return@withContext flat(bars)
         val extractor = MediaExtractor()
         try {
-            extractor.setDataSource(path)
+            if (source.startsWith("content://")) extractor.setDataSource(context, Uri.parse(source), null)
+            else extractor.setDataSource(source)
             val track = (0 until extractor.trackCount).firstOrNull {
                 extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true
             } ?: return@withContext flat(bars)

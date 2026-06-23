@@ -1,14 +1,16 @@
 package com.vaibhawmishra.voela.data.audio
 
 import android.content.Context
+import android.media.MediaExtractor
+import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.provider.OpenableColumns
 import java.io.File
 
-data class AudioMetadata(val format: String, val durationMs: Long, val sizeBytes: Long)
+data class AudioMetadata(val format: String, val durationMs: Long, val sizeBytes: Long, val sampleRateHz: Int)
 
-// Reads display metadata (format, duration, size) from a local path or a content Uri
+// Reads display metadata (format, duration, size, sample rate) from a local path or content Uri
 object AudioMetadataReader {
 
     fun read(context: Context, source: String): AudioMetadata {
@@ -22,7 +24,23 @@ object AudioMetadataReader {
         } finally {
             retriever.release()
         }
-        return AudioMetadata(formatOf(context, source, uri), durationMs, sizeOf(context, source, uri))
+        return AudioMetadata(formatOf(context, source, uri), durationMs, sizeOf(context, source, uri), sampleRateOf(context, source, uri))
+    }
+
+    private fun sampleRateOf(context: Context, source: String, uri: Uri?): Int {
+        val extractor = MediaExtractor()
+        return try {
+            if (uri != null) extractor.setDataSource(context, uri, null) else extractor.setDataSource(source)
+            (0 until extractor.trackCount)
+                .map { extractor.getTrackFormat(it) }
+                .firstOrNull { it.getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+                ?.takeIf { it.containsKey(MediaFormat.KEY_SAMPLE_RATE) }
+                ?.getInteger(MediaFormat.KEY_SAMPLE_RATE) ?: 0
+        } catch (t: Throwable) {
+            0
+        } finally {
+            extractor.release()
+        }
     }
 
     private fun formatOf(context: Context, source: String, uri: Uri?): String {

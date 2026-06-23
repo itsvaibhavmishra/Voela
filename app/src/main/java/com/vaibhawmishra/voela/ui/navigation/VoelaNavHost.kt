@@ -23,6 +23,9 @@ import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.trim.TrimAudioScreen
+import com.vaibhawmishra.voela.ui.trim.TrimAudioViewModel
+import com.vaibhawmishra.voela.ui.trim.TrimFeature
 import com.vaibhawmishra.voela.ui.youtube.YouTubeUrlScreen
 import com.vaibhawmishra.voela.ui.youtube.YouTubeViewModel
 
@@ -31,12 +34,13 @@ private object Routes {
     const val YOUTUBE = "youtube"
     const val LIBRARY = "library"
     const val FEATURE = "feature/{name}/{source}"
-    const val SPLIT_VOCALS = "split_vocals/{name}/{source}"
-    const val SPLIT_AUDIO = "split_audio/{name}/{source}"
+    const val TRIM = "trim/{feature}/{name}/{source}"
+    const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}"
     const val SPLIT = "split/{name}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
-    fun splitVocals(name: String, source: String) = "split_vocals/${Uri.encode(name)}/${Uri.encode(source)}"
-    fun splitAudio(name: String, source: String) = "split_audio/${Uri.encode(name)}/${Uri.encode(source)}"
+    fun trim(feature: String, name: String, source: String) = "trim/$feature/${Uri.encode(name)}/${Uri.encode(source)}"
+    fun process(feature: String, name: String, source: String, start: Long, end: Long) =
+        "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end"
     fun split(name: String) = "split/${Uri.encode(name)}"
 }
 
@@ -101,33 +105,52 @@ fun VoelaNavHost() {
                 uiState = state,
                 onBack = navController::popBackStack,
                 onPlayPause = viewModel::onPlayPause,
-                onSplitVocals = { navController.navigate(Routes.splitVocals(name, source)) },
-                onSplitAudio = { navController.navigate(Routes.splitAudio(name, source)) },
+                onSplitVocals = { navController.navigate(Routes.trim(TrimFeature.VOCALS.key, name, source)) },
+                onSplitAudio = { navController.navigate(Routes.trim(TrimFeature.AUDIO.key, name, source)) },
             )
         }
         composable(
-            Routes.SPLIT_VOCALS,
+            Routes.TRIM,
             arguments = listOf(
+                navArgument("feature") { type = NavType.StringType },
                 navArgument("name") { type = NavType.StringType },
                 navArgument("source") { type = NavType.StringType },
             ),
         ) { entry ->
-            PlaceholderScreen(
-                title = "Split Vocals",
-                subtitle = entry.arguments?.getString("name").orEmpty(),
+            val feature = entry.arguments?.getString("feature")
+            val name = entry.arguments?.getString("name").orEmpty()
+            val source = entry.arguments?.getString("source").orEmpty()
+            val viewModel: TrimAudioViewModel =
+                viewModel(factory = TrimAudioViewModel.factory(TrimFeature.from(feature), name, source))
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            TrimAudioScreen(
+                uiState = state,
                 onBack = navController::popBackStack,
+                onPlayPause = viewModel::onPlayPause,
+                onRangeChange = viewModel::onRangeChange,
+                onStartStep = viewModel::onStartStep,
+                onEndStep = viewModel::onEndStep,
+                onProceed = {
+                    navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs))
+                },
             )
         }
         composable(
-            Routes.SPLIT_AUDIO,
+            Routes.PROCESS,
             arguments = listOf(
+                navArgument("feature") { type = NavType.StringType },
                 navArgument("name") { type = NavType.StringType },
                 navArgument("source") { type = NavType.StringType },
+                navArgument("start") { type = NavType.LongType },
+                navArgument("end") { type = NavType.LongType },
             ),
         ) { entry ->
+            val feature = TrimFeature.from(entry.arguments?.getString("feature"))
+            val start = entry.arguments?.getLong("start") ?: 0L
+            val end = entry.arguments?.getLong("end") ?: 0L
             PlaceholderScreen(
-                title = "Split Audio",
-                subtitle = entry.arguments?.getString("name").orEmpty(),
+                title = if (feature == TrimFeature.VOCALS) "Split Vocals" else "Split Audio",
+                subtitle = "${TrimAudioViewModel.formatPrecise(start)} – ${TrimAudioViewModel.formatPrecise(end)}",
                 onBack = navController::popBackStack,
             )
         }

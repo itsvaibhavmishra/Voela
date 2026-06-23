@@ -154,7 +154,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
     // Decode the real waveform off the worker so Done isn't blocked; swap it in when ready
     private fun loadWaveform(path: String) {
         viewModelScope.launch {
-            val real = WaveformGenerator.generate(path)
+            val real = WaveformGenerator.generate(getApplication(), path)
             _uiState.update {
                 if (it.result?.localPath == path) it.copy(result = it.result.copy(waveform = real)) else it
             }
