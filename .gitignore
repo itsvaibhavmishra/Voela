@@ -1,0 +1,48 @@
+# ---------- Gradle ----------
+.gradle
+.kotlin
+/build
+/captures
+
+# ---------- Android / Native build ----------
+.externalNativeBuild
+.cxx
+
+# ---------- Local config (machine-specific) ----------
+/local.properties
+local.properties
+
+# ---------- Secrets & signing (NEVER commit) ----------
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+
+# ---------- IDE: IntelliJ / Android Studio ----------
+.idea/
+*.iml
+
+# ---------- IDE: VS Code ----------
+.vscode/
+
+# ---------- IDE: JetBrains Fleet ----------
+.fleet/
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+
+# ---------- Logs / heap dumps ----------
+*.log
+*.hprof
+
+# ---------- Editor backups / swap files ----------
+*~
+*.bak
+*.swp
+*.swo
+.*.swp
+
+# ---------- Git merge / patch artifacts ----------
+*.orig
+*.rej

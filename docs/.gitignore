@@ -1,0 +1,21 @@
+# ---------- docs/ allowlist ----------
+# Planning artifacts (master plan, phase blueprints, todos, scratch notes)
+# live in this folder but are NOT tracked by git. The folder is allowlist-only:
+# ignore everything by default, then explicitly opt-in files that should be
+# committed by adding them below.
+
+# Ignore everything in this folder by default
+*
+
+# Always allow this file itself (otherwise the allowlist rules disappear,
+# and this file also anchors the folder for fresh clones)
+!.gitignore
+
+# Allowlist tracked docs here as they are ready to be committed.
+# Examples (uncomment / add as needed):
+# !ARCHITECTURE.md
+# !INSTALL.md
+
+# README assets — screenshots + logo + wordmark renders + SVG sources.
+!assets/
+!assets/**
