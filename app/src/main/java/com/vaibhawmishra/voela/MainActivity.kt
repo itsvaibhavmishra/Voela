@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.home.sampleRecents
 import com.vaibhawmishra.voela.ui.theme.VoelaTheme
 
 class MainActivity : ComponentActivity() {
@@ -26,7 +28,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    // Screens are hosted here as the navigation graph lands
+                    // Sample data for now — swapped for a real source once functionality lands
+                    HomeScreen(recents = sampleRecents)
                 }
             }
         }

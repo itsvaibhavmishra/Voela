@@ -8,10 +8,10 @@ val PurpleDeep = Color(0xFF7C3AED)
 val PurpleGlow = Color(0xFFA78BFA)
 
 // Surfaces — dark only
-val Background = Color(0xFF0D0D0D)
-val Surface = Color(0xFF161616)
-val SurfaceElevated = Color(0xFF1F1F1F)
-val Outline = Color(0xFF2A2A2A)
+val Background = Color(0xFF070708)
+val Surface = Color(0xFF141417)
+val SurfaceElevated = Color(0xFF29292F)
+val Outline = Color(0xFF242428)
 
 // Text
 val TextPrimary = Color(0xFFF0F0F0)
