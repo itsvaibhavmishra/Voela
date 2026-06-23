@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.vaibhawmishra.voela.data.audio.ProcessingNotifications
 
 // Foreground (dataSync) worker: runs the extraction off the UI, survives app
 // close/swipe/process death, and reports progress via WorkInfo + notification.
@@ -14,7 +15,7 @@ class AudioExtractionWorker(
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
 
-    private val notifications = ExtractionNotifications(appContext)
+    private val notifications = ProcessingNotifications(appContext)
 
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.foregroundInfo(0)
 

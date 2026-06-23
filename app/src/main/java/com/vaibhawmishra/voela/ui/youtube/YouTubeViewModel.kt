@@ -13,10 +13,13 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.Data
 import androidx.work.WorkInfo
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.data.audio.AudioSave
+import com.vaibhawmishra.voela.data.audio.VoelaStorage
+import com.vaibhawmishra.voela.data.audio.WaveformGenerator
 import com.vaibhawmishra.voela.data.youtube.Extraction
 import com.vaibhawmishra.voela.data.youtube.ExtractionRepository
 import com.vaibhawmishra.voela.data.youtube.RecentLinksStore
-import com.vaibhawmishra.voela.data.youtube.WaveformGenerator
+import com.vaibhawmishra.voela.ui.components.DownloadOption
 import com.vaibhawmishra.voela.ui.components.waveformBars
 import java.io.File
 import kotlinx.coroutines.Job
@@ -94,12 +97,12 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         val result = _uiState.value.result ?: return
         if (result.localPath.isBlank()) return
         val data = Data.Builder()
-            .putString(Extraction.KEY_INPUT_PATH, result.localPath)
-            .putString(Extraction.KEY_CODEC, option.codec)
-            .putString(Extraction.KEY_MIME, option.mimeType)
-            .putString(Extraction.KEY_EXTENSION, option.extension)
-            .putString(Extraction.KEY_TITLE, result.title)
-            .apply { option.bitrate?.let { putString(Extraction.KEY_BITRATE, it) } }
+            .putString(AudioSave.KEY_INPUT_PATH, result.localPath)
+            .putString(AudioSave.KEY_MIME, option.mimeType)
+            .putString(AudioSave.KEY_EXTENSION, option.extension)
+            .putString(AudioSave.KEY_TITLE, result.title)
+            .putString(AudioSave.KEY_SUBPATH, VoelaStorage.youtubeDownloads)
+            .apply { option.bitrate?.let { putString(AudioSave.KEY_BITRATE, it) } }
             .build()
         saveInitiated = true
         repository.startSave(data)
@@ -127,7 +130,7 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
                 _uiState.update { it.copy(isSaving = true, saveProgress = 0) }
 
             WorkInfo.State.RUNNING ->
-                _uiState.update { it.copy(isSaving = true, saveProgress = info.progress.getInt(Extraction.KEY_PROGRESS, it.saveProgress)) }
+                _uiState.update { it.copy(isSaving = true, saveProgress = info.progress.getInt(AudioSave.KEY_PROGRESS, it.saveProgress)) }
 
             WorkInfo.State.SUCCEEDED -> if (saveInitiated) {
                 saveInitiated = false

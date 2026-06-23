@@ -1,4 +1,4 @@
-package com.vaibhawmishra.voela.data.youtube
+package com.vaibhawmishra.voela.data.audio
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -20,7 +20,7 @@ import com.vaibhawmishra.voela.R
 
 // Ongoing progress notification (foreground service) + a completion ping so the
 // user sees the result land even while off the app.
-class ExtractionNotifications(private val context: Context) {
+class ProcessingNotifications(private val context: Context) {
 
     private val manager = NotificationManagerCompat.from(context)
 

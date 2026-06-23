@@ -1,4 +1,4 @@
-package com.vaibhawmishra.voela.data.youtube
+package com.vaibhawmishra.voela.data.audio
 
 import android.content.Context
 import android.util.Log
@@ -10,24 +10,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-// Transcodes the already-extracted local audio to the chosen format/quality with the
-// bundled ffmpeg, then copies it into the public Music/Voela folder. Runs as a
-// foreground job so it survives the app closing.
-class SaveAudioWorker(
+// Transcodes a local audio file to the chosen format/quality (Media3 for AAC,
+// LAME for MP3, MediaCodec for WAV) and saves it under Music/<subPath>. Runs as a
+// foreground job so it survives the app closing. Reusable by any feature.
+class AudioSaveWorker(
     appContext: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(appContext, params) {
 
-    private val notifications = ExtractionNotifications(appContext)
+    private val notifications = ProcessingNotifications(appContext)
 
     override suspend fun getForegroundInfo(): ForegroundInfo = notifications.savingForegroundInfo(0)
 
     override suspend fun doWork(): Result {
-        val inputPath = inputData.getString(Extraction.KEY_INPUT_PATH) ?: return Result.failure()
-        val bitrate = inputData.getString(Extraction.KEY_BITRATE)
-        val mime = inputData.getString(Extraction.KEY_MIME) ?: "audio/*"
-        val extension = inputData.getString(Extraction.KEY_EXTENSION) ?: "m4a"
-        val title = inputData.getString(Extraction.KEY_TITLE).orEmpty().ifBlank { "audio" }
+        val inputPath = inputData.getString(AudioSave.KEY_INPUT_PATH) ?: return Result.failure()
+        val bitrate = inputData.getString(AudioSave.KEY_BITRATE)
+        val mime = inputData.getString(AudioSave.KEY_MIME) ?: "audio/*"
+        val extension = inputData.getString(AudioSave.KEY_EXTENSION) ?: "m4a"
+        val title = inputData.getString(AudioSave.KEY_TITLE).orEmpty().ifBlank { "audio" }
+        val subPath = inputData.getString(AudioSave.KEY_SUBPATH) ?: VoelaStorage.youtubeDownloads
 
         setForeground(notifications.savingForegroundInfo(0))
         return try {
@@ -35,13 +36,13 @@ class SaveAudioWorker(
                 val input = File(inputPath)
                 if (!input.exists()) error("Source audio missing")
 
-                val displayName = "${sanitize(title)}.$extension"
+                val displayName = "${VoelaStorage.sanitize(title)}.$extension"
                 val alreadyAac = input.extension.equals("m4a", ignoreCase = true) ||
                     input.extension.equals("mp4", ignoreCase = true)
 
                 if (extension == "m4a" && alreadyAac) {
                     // Source is already AAC — save it as-is, no re-encoding (instant)
-                    if (!MediaStoreSaver.save(applicationContext, input, displayName, mime)) error("Save failed")
+                    if (!MediaStoreSaver.save(applicationContext, input, displayName, mime, subPath)) error("Save failed")
                 } else {
                     val tmpDir = File(applicationContext.cacheDir, "save").apply {
                         mkdirs()
@@ -52,7 +53,7 @@ class SaveAudioWorker(
                     val onProgress = { percent: Int ->
                         if (percent != lastPercent) {
                             lastPercent = percent
-                            setProgressAsync(workDataOf(Extraction.KEY_PROGRESS to percent))
+                            setProgressAsync(workDataOf(AudioSave.KEY_PROGRESS to percent))
                             notifications.updateSaving(percent)
                         }
                     }
@@ -63,19 +64,16 @@ class SaveAudioWorker(
                         else -> false
                     }
                     if (!transcoded) error("Transcode failed")
-                    if (!MediaStoreSaver.save(applicationContext, output, displayName, mime)) error("Save failed")
+                    if (!MediaStoreSaver.save(applicationContext, output, displayName, mime, subPath)) error("Save failed")
                     output.delete()
                 }
 
                 notifications.showSaved(displayName)
-                Result.success(workDataOf(Extraction.KEY_SAVED_NAME to displayName))
+                Result.success(workDataOf(AudioSave.KEY_SAVED_NAME to displayName))
             }
         } catch (t: Throwable) {
-            Log.e("SaveAudioWorker", "Save failed", t)
-            Result.failure(workDataOf(Extraction.KEY_ERROR to (t.message ?: "Save failed")))
+            Log.e("AudioSaveWorker", "Save failed", t)
+            Result.failure(workDataOf(AudioSave.KEY_ERROR to (t.message ?: "Save failed")))
         }
     }
-
-    private fun sanitize(name: String): String =
-        name.replace(Regex("""[\\/:*?"<>|]"""), "_").trim().take(120).ifBlank { "audio" }
 }

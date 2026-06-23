@@ -1,4 +1,4 @@
-package com.vaibhawmishra.voela.data.youtube
+package com.vaibhawmishra.voela.data.audio
 
 import android.content.Context
 import android.media.MediaCodec

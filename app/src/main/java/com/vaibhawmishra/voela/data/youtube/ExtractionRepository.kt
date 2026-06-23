@@ -8,6 +8,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.vaibhawmishra.voela.data.audio.AudioSave
+import com.vaibhawmishra.voela.data.audio.AudioSaveWorker
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -22,7 +24,7 @@ class ExtractionRepository(context: Context) {
         workManager.getWorkInfosForUniqueWorkFlow(Extraction.WORK_NAME).map { it.firstOrNull() }
 
     val saveWorkInfo: Flow<WorkInfo?> =
-        workManager.getWorkInfosForUniqueWorkFlow(Extraction.SAVE_WORK_NAME).map { it.firstOrNull() }
+        workManager.getWorkInfosForUniqueWorkFlow(AudioSave.WORK_NAME).map { it.firstOrNull() }
 
     fun start(url: String) {
         val request = OneTimeWorkRequestBuilder<AudioExtractionWorker>()
@@ -33,11 +35,11 @@ class ExtractionRepository(context: Context) {
     }
 
     fun startSave(data: androidx.work.Data) {
-        val request = OneTimeWorkRequestBuilder<SaveAudioWorker>()
+        // Saving is local — no network constraint
+        val request = OneTimeWorkRequestBuilder<AudioSaveWorker>()
             .setInputData(data)
-            .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build())
             .build()
-        workManager.enqueueUniqueWork(Extraction.SAVE_WORK_NAME, ExistingWorkPolicy.REPLACE, request)
+        workManager.enqueueUniqueWork(AudioSave.WORK_NAME, ExistingWorkPolicy.REPLACE, request)
     }
 
     fun cancel() = workManager.cancelUniqueWork(Extraction.WORK_NAME)

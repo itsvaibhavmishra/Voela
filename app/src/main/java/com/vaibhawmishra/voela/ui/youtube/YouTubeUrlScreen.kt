@@ -37,22 +37,18 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.FileDownload
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.VerifiedUser
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -72,6 +68,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.components.DownloadOption
+import com.vaibhawmishra.voela.ui.components.DownloadOptionsSheet
 import com.vaibhawmishra.voela.ui.components.PlayableWaveform
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.theme.Background
@@ -540,53 +538,5 @@ private fun FooterNote() {
             Spacer(Modifier.height(2.dp))
             Text(stringResource(R.string.tos_desc), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun DownloadOptionsSheet(onDismiss: () -> Unit, onSelect: (DownloadOption) -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(),
-        containerColor = Surface,
-    ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
-            Text(stringResource(R.string.download_title), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
-            Spacer(Modifier.height(4.dp))
-            Text(stringResource(R.string.download_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-            Spacer(Modifier.height(18.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                downloadOptions.forEach { DownloadOptionRow(it) { onSelect(it) } }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DownloadOptionRow(option: DownloadOption, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(Background)
-            .border(1.dp, Outline, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Purple.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Outlined.MusicNote, null, tint = Purple, modifier = Modifier.size(20.dp))
-        }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(option.title, style = MaterialTheme.typography.titleMedium, color = TextPrimary)
-            Spacer(Modifier.height(2.dp))
-            Text(option.subtitle, style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-        }
-        Icon(Icons.Outlined.FileDownload, stringResource(R.string.cd_download), tint = DownloadGreen, modifier = Modifier.size(22.dp))
     }
 }
