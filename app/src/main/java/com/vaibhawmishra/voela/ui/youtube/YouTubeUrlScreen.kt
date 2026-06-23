@@ -45,12 +45,10 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -70,35 +68,22 @@ import com.vaibhawmishra.voela.ui.theme.DownloadGreen
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
-import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 import com.vaibhawmishra.voela.ui.theme.YouTubeRed
-import kotlinx.coroutines.delay
-
-private enum class ExtractionState { Idle, Processing, Done }
-
-data class RecentLink(val title: String, val duration: String, val url: String)
 
 @Composable
 fun YouTubeUrlScreen(
+    uiState: YouTubeUiState,
     onBack: () -> Unit,
+    onUrlChange: (String) -> Unit,
+    onExtract: () -> Unit,
     onContinue: () -> Unit,
+    onClearRecents: () -> Unit,
+    onOpenLink: (RecentLink) -> Unit,
     modifier: Modifier = Modifier,
-    onOpenLink: (RecentLink) -> Unit = {},
 ) {
-    var url by remember { mutableStateOf("") }
-    var state by remember { mutableStateOf(ExtractionState.Idle) }
     var showDownloadSheet by remember { mutableStateOf(false) }
-    val recents = remember { sampleRecentLinks.toMutableStateList() }
-
-    // Placeholder flow so every UI state is visible — replaced by real background extraction later
-    LaunchedEffect(state) {
-        if (state == ExtractionState.Processing) {
-            delay(2600)
-            state = ExtractionState.Done
-        }
-    }
 
     Column(
         modifier
@@ -121,21 +106,23 @@ fun YouTubeUrlScreen(
             Spacer(Modifier.height(20.dp))
 
             LinkCard(
-                url = url,
-                onUrlChange = { url = it },
-                state = state,
-                onExtract = { state = ExtractionState.Processing },
+                url = uiState.url,
+                onUrlChange = onUrlChange,
+                status = uiState.status,
+                progress = uiState.progress,
+                result = uiState.result,
+                onExtract = onExtract,
                 onContinue = onContinue,
                 onDownload = { showDownloadSheet = true },
             )
 
-            if (state == ExtractionState.Idle) {
+            if (uiState.status == ExtractionStatus.Idle) {
                 Spacer(Modifier.height(20.dp))
                 HowItWorksCard()
             }
 
             Spacer(Modifier.height(24.dp))
-            RecentLinksSection(recents = recents, onClearAll = { recents.clear() }, onOpenLink = onOpenLink)
+            RecentLinksSection(recents = uiState.recentLinks, onClearAll = onClearRecents, onOpenLink = onOpenLink)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -170,12 +157,14 @@ private fun Header(onBack: () -> Unit) {
 private fun LinkCard(
     url: String,
     onUrlChange: (String) -> Unit,
-    state: ExtractionState,
+    status: ExtractionStatus,
+    progress: Int,
+    result: ExtractedAudio?,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
     onDownload: () -> Unit,
 ) {
-    val editable = state != ExtractionState.Processing
+    val editable = status != ExtractionStatus.Processing
     Column(
         Modifier
             .fillMaxWidth()
@@ -229,16 +218,16 @@ private fun LinkCard(
         PrimaryButton(
             text = stringResource(R.string.extract_audio),
             onClick = onExtract,
-            enabled = url.isNotBlank() && state != ExtractionState.Processing,
+            enabled = url.isNotBlank() && status != ExtractionStatus.Processing,
         )
 
-        if (state == ExtractionState.Processing) {
+        if (status == ExtractionStatus.Processing) {
             Spacer(Modifier.height(16.dp))
-            ProcessingIndicator()
+            ProcessingIndicator(progress)
         }
-        if (state == ExtractionState.Done) {
+        if (status == ExtractionStatus.Done && result != null) {
             Spacer(Modifier.height(16.dp))
-            ResultRow(onDownload = onDownload)
+            ResultRow(result, onDownload = onDownload)
             Spacer(Modifier.height(16.dp))
             PrimaryButton(text = stringResource(R.string.continue_action), onClick = onContinue)
         }
@@ -246,7 +235,7 @@ private fun LinkCard(
 }
 
 @Composable
-private fun ProcessingIndicator() {
+private fun ProcessingIndicator(progress: Int) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -259,11 +248,13 @@ private fun ProcessingIndicator() {
         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Purple)
         Spacer(Modifier.width(14.dp))
         Text(stringResource(R.string.extracting_audio), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+        Spacer(Modifier.weight(1f))
+        Text("$progress%", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
     }
 }
 
 @Composable
-private fun ResultRow(onDownload: () -> Unit) {
+private fun ResultRow(result: ExtractedAudio, onDownload: () -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -281,7 +272,7 @@ private fun ResultRow(onDownload: () -> Unit) {
         }
         Spacer(Modifier.width(14.dp))
         Waveform(
-            bars = remember { waveformBars(seed = 99) },
+            bars = result.waveform,
             color = Purple,
             modifier = Modifier.weight(1f).height(40.dp),
         )
@@ -474,7 +465,7 @@ private fun DownloadOptionRow(option: DownloadOption, onClick: () -> Unit) {
     }
 }
 
-// format is the audio file type shown to the user (.mp3, .m4a, .wav)
+// format is the audio file type shown to the user (MP3, M4A, WAV)
 data class DownloadOption(val format: String, val quality: String, val size: String)
 
 private val downloadOptions = listOf(
@@ -482,10 +473,4 @@ private val downloadOptions = listOf(
     DownloadOption("MP3", "192 kbps · Standard", "~5.4 MB"),
     DownloadOption("M4A", "256 kbps · AAC", "~7.2 MB"),
     DownloadOption("WAV", "Lossless", "~52 MB"),
-)
-
-private val sampleRecentLinks = listOf(
-    RecentLink("Lofi study mix — 1 hour", "1:02:14", "https://youtu.be/aaaa1111"),
-    RecentLink("Acoustic guitar session", "3:24", "https://youtu.be/bbbb2222"),
-    RecentLink("City ambience for focus", "4:20", "https://youtu.be/cccc3333"),
 )

@@ -10,7 +10,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,6 +22,7 @@ import androidx.navigation.navArgument
 import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.home.HomeScreen
 import com.vaibhawmishra.voela.ui.youtube.YouTubeUrlScreen
+import com.vaibhawmishra.voela.ui.youtube.YouTubeViewModel
 
 private object Routes {
     const val HOME = "home"
@@ -56,9 +60,16 @@ fun VoelaNavHost() {
             )
         }
         composable(Routes.YOUTUBE) {
+            val viewModel: YouTubeViewModel = viewModel(factory = YouTubeViewModel.Factory)
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             YouTubeUrlScreen(
+                uiState = state,
                 onBack = navController::popBackStack,
+                onUrlChange = viewModel::onUrlChange,
+                onExtract = viewModel::onExtract,
                 onContinue = { navController.navigate(Routes.feature("Extracted Audio")) },
+                onClearRecents = viewModel::onClearRecents,
+                onOpenLink = {},
             )
         }
         composable(Routes.LIBRARY) {
