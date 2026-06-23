@@ -39,6 +39,7 @@ import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.Link
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -68,13 +69,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.components.PlayableWaveform
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
-import com.vaibhawmishra.voela.ui.components.Waveform
-import com.vaibhawmishra.voela.ui.components.waveformBars
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.DownloadGreen
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
+import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
@@ -88,6 +89,8 @@ fun YouTubeUrlScreen(
     onExtract: () -> Unit,
     onContinue: () -> Unit,
     onClearResult: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSeek: (Float) -> Unit,
     onClearRecents: () -> Unit,
     onOpenLink: (RecentLink) -> Unit,
     modifier: Modifier = Modifier,
@@ -132,9 +135,13 @@ fun YouTubeUrlScreen(
                 status = uiState.status,
                 progress = uiState.progress,
                 result = uiState.result,
+                isPlaying = uiState.isPlaying,
+                playbackProgress = uiState.playbackProgress,
                 onExtract = extractAction,
                 onContinue = onContinue,
                 onClearResult = onClearResult,
+                onPlayPause = onPlayPause,
+                onSeek = onSeek,
                 onDownload = { showDownloadSheet = true },
             )
 
@@ -182,9 +189,13 @@ private fun LinkCard(
     status: ExtractionStatus,
     progress: Int,
     result: ExtractedAudio?,
+    isPlaying: Boolean,
+    playbackProgress: Float,
     onExtract: () -> Unit,
     onContinue: () -> Unit,
     onClearResult: () -> Unit,
+    onPlayPause: () -> Unit,
+    onSeek: (Float) -> Unit,
     onDownload: () -> Unit,
 ) {
     val editable = status != ExtractionStatus.Processing
@@ -265,7 +276,7 @@ private fun LinkCard(
                 }
             }
             Spacer(Modifier.height(10.dp))
-            ResultRow(result, onDownload = onDownload)
+            ResultRow(result, isPlaying, playbackProgress, onPlayPause, onSeek, onDownload)
             Spacer(Modifier.height(16.dp))
             PrimaryButton(text = stringResource(R.string.continue_action), onClick = onContinue)
         }
@@ -285,7 +296,11 @@ private fun ProcessingIndicator(progress: Int) {
     ) {
         CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Purple)
         Spacer(Modifier.width(14.dp))
-        Text(stringResource(R.string.extracting_audio), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+        Text(
+            stringResource(if (progress > 0) R.string.extracting_audio else R.string.preparing_audio),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextPrimary,
+        )
         if (progress > 0) {
             Spacer(Modifier.weight(1f))
             Text("$progress%", style = MaterialTheme.typography.labelLarge, color = TextSecondary)
@@ -294,7 +309,14 @@ private fun ProcessingIndicator(progress: Int) {
 }
 
 @Composable
-private fun ResultRow(result: ExtractedAudio, onDownload: () -> Unit) {
+private fun ResultRow(
+    result: ExtractedAudio,
+    isPlaying: Boolean,
+    progress: Float,
+    onPlayPause: () -> Unit,
+    onSeek: (Float) -> Unit,
+    onDownload: () -> Unit,
+) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -305,15 +327,23 @@ private fun ResultRow(result: ExtractedAudio, onDownload: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(Purple),
+            Modifier.size(44.dp).clip(CircleShape).background(Purple).clickable(onClick = onPlayPause),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Rounded.PlayArrow, stringResource(R.string.cd_play), tint = Color.White, modifier = Modifier.size(26.dp))
+            Icon(
+                if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
+                stringResource(R.string.cd_play),
+                tint = Color.White,
+                modifier = Modifier.size(26.dp),
+            )
         }
         Spacer(Modifier.width(14.dp))
-        Waveform(
+        PlayableWaveform(
             bars = result.waveform,
-            color = Purple,
+            progress = progress,
+            playedColor = PurpleGlow,
+            pendingColor = Purple.copy(alpha = 0.3f),
+            onSeek = onSeek,
             modifier = Modifier.weight(1f).height(40.dp),
         )
         Spacer(Modifier.width(10.dp))

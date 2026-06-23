@@ -33,6 +33,7 @@ class YtDlpAudioExtractor(private val context: Context) : AudioExtractor {
             addOption("-f", "bestaudio")
             addOption("--no-playlist")
             addOption("--write-info-json")
+            addOption("-N", 4) // parallel fragments speed up the download
             addOption("-o", "${outputDir.absolutePath}/%(id)s.%(ext)s")
         }
         YoutubeDL.getInstance().execute(request, null) { progress, _, _ ->

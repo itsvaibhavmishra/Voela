@@ -15,8 +15,13 @@ data class YouTubeUiState(
     val status: ExtractionStatus = ExtractionStatus.Idle,
     val progress: Int = 0,
     val result: ExtractedAudio? = null,
+    val isPlaying: Boolean = false,
+    val positionMs: Long = 0,
+    val durationMs: Long = 0,
     val recentLinks: List<RecentLink> = emptyList(),
-)
+) {
+    val playbackProgress: Float get() = if (durationMs > 0) (positionMs.toFloat() / durationMs).coerceIn(0f, 1f) else 0f
+}
 
 // Seed shown until recents are persisted (DataStore) in a later phase
 internal val initialRecentLinks = listOf(

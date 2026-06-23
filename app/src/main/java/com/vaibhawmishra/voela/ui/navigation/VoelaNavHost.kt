@@ -69,6 +69,8 @@ fun VoelaNavHost() {
                 onExtract = viewModel::onExtract,
                 onContinue = { navController.navigate(Routes.feature("Extracted Audio")) },
                 onClearResult = viewModel::onClearResult,
+                onPlayPause = viewModel::onPlayPause,
+                onSeek = viewModel::onSeek,
                 onClearRecents = viewModel::onClearRecents,
                 onOpenLink = {},
             )

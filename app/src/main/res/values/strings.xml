@@ -25,6 +25,7 @@
     <string name="extract_audio">Extract Audio</string>
     <string name="download_title">Download audio</string>
     <string name="download_subtitle">Choose a format and quality</string>
+    <string name="preparing_audio">Preparing…</string>
     <string name="extracting_audio">Extracting audio…</string>
     <string name="continue_action">Continue</string>
     <string name="how_it_works">How it works</string>
