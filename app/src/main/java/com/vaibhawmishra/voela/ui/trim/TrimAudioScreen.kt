@@ -154,29 +154,32 @@ fun TrimAudioScreen(
                 InfoNote()
                 Spacer(Modifier.height(24.dp))
 
-                Text(stringResource(R.string.trim_quality), style = MaterialTheme.typography.titleSmall, color = TextSecondary)
-                Spacer(Modifier.height(10.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    EngineOption(
-                        title = stringResource(R.string.engine_fast),
-                        description = stringResource(R.string.engine_fast_desc),
-                        selected = uiState.engine == SeparationEngine.FAST,
-                        enabled = true,
-                        onClick = { onEngineChange(SeparationEngine.FAST) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    EngineOption(
-                        title = stringResource(R.string.engine_best),
-                        description = stringResource(R.string.engine_best_desc),
-                        selected = uiState.engine == SeparationEngine.BEST,
-                        enabled = true,
-                        onClick = { onEngineChange(SeparationEngine.BEST) },
-                        modifier = Modifier.weight(1f),
-                    )
+                // Engine choice only applies to Split Vocals (separation); Split Audio just cuts.
+                if (uiState.feature == TrimFeature.VOCALS) {
+                    Text(stringResource(R.string.trim_quality), style = MaterialTheme.typography.titleSmall, color = TextSecondary)
+                    Spacer(Modifier.height(10.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        EngineOption(
+                            title = stringResource(R.string.engine_fast),
+                            description = stringResource(R.string.engine_fast_desc),
+                            selected = uiState.engine == SeparationEngine.FAST,
+                            enabled = true,
+                            onClick = { onEngineChange(SeparationEngine.FAST) },
+                            modifier = Modifier.weight(1f),
+                        )
+                        EngineOption(
+                            title = stringResource(R.string.engine_best),
+                            description = stringResource(R.string.engine_best_desc),
+                            selected = uiState.engine == SeparationEngine.BEST,
+                            enabled = true,
+                            onClick = { onEngineChange(SeparationEngine.BEST) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
                 }
             }
 
-            if (uiState.estimateSeconds > 0) {
+            if (uiState.feature == TrimFeature.VOCALS && uiState.estimateSeconds > 0) {
                 Spacer(Modifier.height(12.dp))
                 Row(
                     Modifier.fillMaxWidth(),

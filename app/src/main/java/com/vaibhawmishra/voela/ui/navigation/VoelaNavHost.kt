@@ -22,6 +22,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.vaibhawmishra.voela.ui.audiosplit.AudioSplitScreen
+import com.vaibhawmishra.voela.ui.audiosplit.AudioSplitViewModel
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
@@ -50,12 +52,15 @@ private object Routes {
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
+    const val AUDIO_SPLIT = "audiosplit/{name}/{source}/{start}/{end}"
     const val RESULT = "result/{feature}/{name}/{elapsed}?lib={lib}"
     fun youtube(lib: String = "") = "youtube?lib=${Uri.encode(lib)}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun trim(feature: String, name: String, source: String) = "trim/$feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun process(feature: String, name: String, source: String, start: Long, end: Long, engine: String) =
         "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end/$engine"
+    fun audioSplit(name: String, source: String, start: Long, end: Long) =
+        "audiosplit/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end"
     fun result(feature: String, name: String, elapsedMs: Long, lib: String = "") =
         "result/$feature/${Uri.encode(name)}/$elapsedMs?lib=${Uri.encode(lib)}"
 }
@@ -199,8 +204,38 @@ fun VoelaNavHost() {
                 onEndStep = viewModel::onEndStep,
                 onEngineChange = viewModel::onEngineChange,
                 onProceed = {
-                    navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs, state.engine.name.lowercase()))
+                    if (state.feature == TrimFeature.AUDIO) {
+                        navController.navigate(Routes.audioSplit(name, source, state.startMs, state.endMs))
+                    } else {
+                        navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs, state.engine.name.lowercase()))
+                    }
                 },
+            )
+        }
+        composable(
+            Routes.AUDIO_SPLIT,
+            arguments = listOf(
+                navArgument("name") { type = NavType.StringType },
+                navArgument("source") { type = NavType.StringType },
+                navArgument("start") { type = NavType.LongType },
+                navArgument("end") { type = NavType.LongType },
+            ),
+        ) { entry ->
+            val name = entry.arguments?.getString("name").orEmpty()
+            val source = entry.arguments?.getString("source").orEmpty()
+            val start = entry.arguments?.getLong("start") ?: 0L
+            val end = entry.arguments?.getLong("end") ?: 0L
+            val viewModel: AudioSplitViewModel = viewModel(factory = AudioSplitViewModel.factory(name, source, start, end))
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            AudioSplitScreen(
+                uiState = state,
+                onBack = navController::popBackStack,
+                onUnitChange = viewModel::onUnitChange,
+                onStepUp = viewModel::stepUp,
+                onStepDown = viewModel::stepDown,
+                onPlayPause = viewModel::onPlayPause,
+                onPlayClip = viewModel::onPlayClip,
+                onSplit = { /* actual split + save wired next */ },
             )
         }
         composable(
