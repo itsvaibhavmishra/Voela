@@ -79,6 +79,7 @@ class YouTubeViewModel(application: Application, libraryId: String = "") : Andro
         val item = libraryStore.items.first().firstOrNull { it.id == libraryId } ?: return
         val file = libraryStore.extractionFile(item)
         if (!file.exists()) return
+        libraryStore.touch(libraryId) // reopened — reset its expiry clock
         val path = file.absolutePath
         _uiState.update {
             it.copy(

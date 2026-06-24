@@ -21,6 +21,7 @@ import com.vaibhawmishra.voela.data.audio.AudioSave
 import com.vaibhawmishra.voela.data.audio.AudioSaveWorker
 import com.vaibhawmishra.voela.data.audio.VoelaStorage
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
+import com.vaibhawmishra.voela.data.library.LibraryStore
 import com.vaibhawmishra.voela.ui.components.DownloadOption
 import java.io.File
 import java.text.SimpleDateFormat
@@ -64,6 +65,8 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long, 
             }
         })
         loadStems()
+        // Reopened from the library — reset its expiry clock
+        if (libraryId.isNotBlank()) viewModelScope.launch { LibraryStore(application).touch(libraryId) }
         viewModelScope.launch {
             workManager.getWorkInfosForUniqueWorkFlow(AudioSave.WORK_NAME).collect { applySaveInfo(it.firstOrNull()) }
         }

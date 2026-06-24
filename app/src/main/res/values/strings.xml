@@ -92,6 +92,10 @@
     <string name="library_clear_body">This deletes all saved extractions and splits from the app. Files you exported to Music are not affected.</string>
     <string name="library_delete_title">Delete selected?</string>
     <string name="library_delete_body">The selected items will be removed from the app. Files you exported to Music are not affected.</string>
+    <string name="library_autoclear">Auto-clear unused after</string>
+    <string name="expiry_never">Never</string>
+    <string name="expiry_one_day">1 day</string>
+    <string name="expiry_n_days">%1$d days</string>
 
     <!-- Result screen -->
     <string name="result_title">Separation Results</string>

@@ -126,6 +126,7 @@ fun VoelaNavHost() {
                 onExitSelection = viewModel::exitSelection,
                 onDeleteSelected = viewModel::deleteSelected,
                 onClearAll = viewModel::clearAll,
+                onSetExpiry = viewModel::setExpiry,
             )
         }
         composable(

@@ -23,6 +23,11 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
             .map { items -> items.take(RECENTS_MAX).map { it.toRecentAudio() } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
+    init {
+        // Clean up items past their expiry window on app start
+        viewModelScope.launch { store.sweepExpired() }
+    }
+
     fun delete(id: String) = viewModelScope.launch { store.delete(id) }
 
     companion object {

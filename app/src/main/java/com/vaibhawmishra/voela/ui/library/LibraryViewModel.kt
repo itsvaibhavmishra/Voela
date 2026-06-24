@@ -26,6 +26,7 @@ data class LibraryUiState(
     val totalLabel: String = "",
     val selectionMode: Boolean = false,
     val selected: Set<String> = emptySet(),
+    val expiryDays: Int = LibraryStore.DEFAULT_EXPIRY_DAYS,
 )
 
 // Full list of kept actions with per-item + total storage, plus selection/delete.
@@ -36,11 +37,11 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     private val selection = MutableStateFlow(Sel())
 
     val uiState: StateFlow<LibraryUiState> =
-        combine(store.items, selection) { items, sel ->
+        combine(store.items, selection, store.expiryDays) { items, sel, expiry ->
             val entries = items.map { LibraryEntry(it.toRecentAudio(), formatBytes(store.folderSize(it.id))) }
             val total = items.sumOf { store.folderSize(it.id) }
             val valid = sel.ids.intersect(items.map { it.id }.toSet())
-            LibraryUiState(entries, formatBytes(total), sel.mode, valid)
+            LibraryUiState(entries, formatBytes(total), sel.mode, valid, expiry)
         }.flowOn(Dispatchers.IO).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), LibraryUiState())
 
     fun startSelection() { selection.value = Sel(true, emptySet()) }
@@ -70,6 +71,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         exitSelection()
         viewModelScope.launch { store.clear() }
     }
+
+    fun setExpiry(days: Int) = viewModelScope.launch { store.setExpiryDays(days) }
 
     companion object {
         val Factory = viewModelFactory {

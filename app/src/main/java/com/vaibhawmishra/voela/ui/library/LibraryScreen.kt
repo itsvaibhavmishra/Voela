@@ -25,11 +25,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.AutoDelete
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -54,6 +57,7 @@ import com.vaibhawmishra.voela.ui.home.RecentAudio
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
+import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 import com.vaibhawmishra.voela.ui.theme.Warning
@@ -70,6 +74,7 @@ fun LibraryScreen(
     onExitSelection: () -> Unit,
     onDeleteSelected: () -> Unit,
     onClearAll: () -> Unit,
+    onSetExpiry: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var confirm by remember { mutableStateOf<Confirm?>(null) }
@@ -107,6 +112,8 @@ fun LibraryScreen(
                     HeaderAction(stringResource(R.string.action_clear_all), Warning) { confirm = Confirm.ClearAll }
                 }
             }
+            Spacer(Modifier.height(10.dp))
+            AutoClearControl(uiState.expiryDays, onSetExpiry)
         }
         Spacer(Modifier.height(16.dp))
 
@@ -157,6 +164,52 @@ fun LibraryScreen(
 }
 
 private enum class Confirm { ClearAll, DeleteSelected }
+
+private val EXPIRY_OPTIONS = listOf(0, 1, 7, 30)
+
+@Composable
+private fun expiryLabel(days: Int): String = when (days) {
+    0 -> stringResource(R.string.expiry_never)
+    1 -> stringResource(R.string.expiry_one_day)
+    else -> stringResource(R.string.expiry_n_days, days)
+}
+
+@Composable
+private fun AutoClearControl(days: Int, onSet: (Int) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Outlined.AutoDelete, null, tint = TextSecondary, modifier = Modifier.size(15.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(stringResource(R.string.library_autoclear), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
+        Spacer(Modifier.width(8.dp))
+        Box {
+            Row(
+                Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(SurfaceElevated)
+                    .clickable { open = true }
+                    .padding(start = 12.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(expiryLabel(days), style = MaterialTheme.typography.labelLarge, color = TextPrimary)
+                Icon(Icons.Outlined.ArrowDropDown, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+            }
+            DropdownMenu(
+                expanded = open,
+                onDismissRequest = { open = false },
+                shape = RoundedCornerShape(14.dp),
+                containerColor = SurfaceElevated,
+            ) {
+                EXPIRY_OPTIONS.forEach { d ->
+                    DropdownMenuItem(
+                        text = { Text(expiryLabel(d), color = if (d == days) Purple else TextPrimary) },
+                        onClick = { onSet(d); open = false },
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun HeaderAction(label: String, color: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {

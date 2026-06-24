@@ -2,11 +2,13 @@ package com.vaibhawmishra.voela.data.library
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -20,6 +22,31 @@ private val Context.libraryDataStore by preferencesDataStore(name = "library")
 class LibraryStore(private val context: Context) {
 
     private val key = stringPreferencesKey("items")
+    private val expiryKey = intPreferencesKey("expiry_days")
+
+    // Days an untouched item is kept before auto-cleanup; 0 = never expire.
+    val expiryDays: Flow<Int> = context.libraryDataStore.data.map { it[expiryKey] ?: DEFAULT_EXPIRY_DAYS }
+
+    suspend fun setExpiryDays(days: Int) {
+        context.libraryDataStore.edit { it[expiryKey] = days }
+    }
+
+    // Reset an item's clock when it's reopened, so things you still use don't expire.
+    suspend fun touch(id: String) {
+        val now = System.currentTimeMillis()
+        context.libraryDataStore.edit { prefs ->
+            prefs[key] = encode(decode(prefs[key]).map { if (it.id == id) it.copy(lastOpenedAt = now) else it })
+        }
+    }
+
+    // Delete items untouched for longer than the expiry window. No-op when set to never.
+    suspend fun sweepExpired() = withContext(Dispatchers.IO) {
+        val data = context.libraryDataStore.data.first()
+        val days = data[expiryKey] ?: DEFAULT_EXPIRY_DAYS
+        if (days <= 0) return@withContext
+        val cutoff = System.currentTimeMillis() - days * 86_400_000L
+        decode(data[key]).filter { it.lastOpenedAt in 1 until cutoff }.forEach { delete(it.id) }
+    }
 
     private val root: File get() = File(context.getExternalFilesDir(null), "library")
     fun dir(id: String): File = File(root, id)
@@ -111,5 +138,9 @@ class LibraryStore(private val context: Context) {
                 )
             }
         }.getOrDefault(emptyList())
+    }
+
+    companion object {
+        const val DEFAULT_EXPIRY_DAYS = 7
     }
 }
