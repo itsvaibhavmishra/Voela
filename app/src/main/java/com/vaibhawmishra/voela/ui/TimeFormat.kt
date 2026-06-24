@@ -1,5 +1,16 @@
 package com.vaibhawmishra.voela.ui
 
+// Human-readable file size, e.g. "0.4 MB", "142 MB", "1.2 GB".
+fun formatBytes(bytes: Long): String {
+    val mb = bytes / 1_048_576.0
+    return when {
+        mb < 0.1 -> "%.0f KB".format(bytes / 1024.0)
+        mb < 100 -> "%.1f MB".format(mb)
+        mb < 1024 -> "%.0f MB".format(mb)
+        else -> "%.2f GB".format(mb / 1024.0)
+    }
+}
+
 // Shared short duration formatting, e.g. "8s" or "1m 45s".
 fun formatDurationSeconds(seconds: Int): String {
     val s = seconds.coerceAtLeast(0)

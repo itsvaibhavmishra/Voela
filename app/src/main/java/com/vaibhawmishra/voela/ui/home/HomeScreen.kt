@@ -84,6 +84,7 @@ fun HomeScreen(
     onYouTubeUrl: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
     onRecentClick: (RecentAudio) -> Unit = {},
+    onRecentDelete: (RecentAudio) -> Unit = {},
 ) {
     Column(
         modifier
@@ -118,7 +119,7 @@ fun HomeScreen(
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(recents, key = { it.id }) { item ->
-                    RecentRow(item, onClick = { onRecentClick(item) })
+                    RecentRow(item, onClick = { onRecentClick(item) }, onDelete = { onRecentDelete(item) })
                 }
             }
         }
@@ -209,7 +210,7 @@ private fun RecentsHeader(showViewAll: Boolean, onViewAll: () -> Unit) {
 }
 
 @Composable
-private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
+private fun RecentRow(item: RecentAudio, onClick: () -> Unit, onDelete: () -> Unit) {
     var menuExpanded by remember { mutableStateOf(false) }
     Row(
         Modifier
@@ -261,6 +262,7 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
                 HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = Outline)
                 RecentMenuItem(stringResource(R.string.action_delete), Icons.Outlined.Delete, Warning, Warning) {
                     menuExpanded = false
+                    onDelete()
                 }
             }
         }

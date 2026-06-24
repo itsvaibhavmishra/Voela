@@ -87,6 +87,7 @@ fun VoelaNavHost() {
                 onYouTubeUrl = { navController.navigate(Routes.youtube()) },
                 onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
                 onRecentClick = { openLibraryItem(navController, it) },
+                onRecentDelete = { homeViewModel.delete(it.id) },
             )
         }
         composable(
@@ -113,11 +114,18 @@ fun VoelaNavHost() {
         }
         composable(Routes.LIBRARY) {
             val viewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory)
-            val items by viewModel.items.collectAsStateWithLifecycle()
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
             LibraryScreen(
-                items = items,
+                uiState = state,
                 onBack = navController::popBackStack,
                 onItemClick = { openLibraryItem(navController, it) },
+                onStartSelection = viewModel::startSelection,
+                onEnterSelection = viewModel::enterSelection,
+                onToggle = viewModel::toggle,
+                onSelectAll = viewModel::selectAll,
+                onExitSelection = viewModel::exitSelection,
+                onDeleteSelected = viewModel::deleteSelected,
+                onClearAll = viewModel::clearAll,
             )
         }
         composable(

@@ -55,6 +55,24 @@ class LibraryStore(private val context: Context) {
         prepend(LibraryItem(id, LibraryType.VOCAL_SPLIT, title, now, now, durationMs, elapsedMs, ""))
     }
 
+    // Total bytes a kept item occupies on disk.
+    fun folderSize(id: String): Long =
+        dir(id).listFiles()?.sumOf { it.length() } ?: 0L
+
+    // Remove one item: drop its record and delete its files.
+    suspend fun delete(id: String) {
+        withContext(Dispatchers.IO) { dir(id).deleteRecursively() }
+        context.libraryDataStore.edit { prefs ->
+            prefs[key] = encode(decode(prefs[key]).filterNot { it.id == id })
+        }
+    }
+
+    // Remove everything.
+    suspend fun clear() {
+        withContext(Dispatchers.IO) { root.deleteRecursively() }
+        context.libraryDataStore.edit { it.remove(key) }
+    }
+
     private suspend fun prepend(item: LibraryItem) {
         context.libraryDataStore.edit { prefs ->
             prefs[key] = encode(listOf(item) + decode(prefs[key]))

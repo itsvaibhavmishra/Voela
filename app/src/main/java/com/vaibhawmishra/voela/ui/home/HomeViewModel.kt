@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 // Feeds Home's Recents from the kept-actions library (newest few).
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
@@ -21,6 +22,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         store.items
             .map { items -> items.take(RECENTS_MAX).map { it.toRecentAudio() } }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun delete(id: String) = viewModelScope.launch { store.delete(id) }
 
     companion object {
         private const val RECENTS_MAX = 4
