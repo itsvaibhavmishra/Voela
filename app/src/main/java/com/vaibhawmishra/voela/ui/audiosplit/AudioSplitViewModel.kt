@@ -10,7 +10,14 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.vaibhawmishra.voela.data.audio.AudioSplit
 import com.vaibhawmishra.voela.data.audio.AudioSplitPlan
+import com.vaibhawmishra.voela.data.audio.AudioSplitWorker
 import com.vaibhawmishra.voela.data.audio.ClipRange
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
 import java.io.File
@@ -34,6 +41,10 @@ data class AudioSplitUiState(
     val isPlaying: Boolean = false,
     val positionMs: Long = 0,   // within the selection (0..totalMs)
     val playingClip: Int = -1,  // -1 = whole selection, else the clip index
+    val splitting: Boolean = false,
+    val splitProgress: Int = 0,
+    val savedCount: Int = 0,    // >0 once clips are saved (drives the confirmation)
+    val error: String? = null,
 ) {
     val segmentMs: Long get() = if (unit == SplitUnit.MINUTES) value * 60_000L else value * 1_000L
 }
@@ -47,10 +58,13 @@ class AudioSplitViewModel(
 ) : AndroidViewModel(application) {
 
     private val player = ExoPlayer.Builder(application).build()
+    private val workManager = WorkManager.getInstance(application)
+    private val splitSource = source
     private var positionJob: Job? = null
     private var recomputeJob: Job? = null
     private var rangeStart = startMs
     private var rangeEnd = endMs
+    @Volatile private var splitInitiated = false
 
     private val _uiState = MutableStateFlow(
         AudioSplitUiState(title = title, totalMs = (endMs - startMs).coerceAtLeast(0)).recompute(),
@@ -70,6 +84,47 @@ class AudioSplitViewModel(
         viewModelScope.launch {
             val bars = WaveformGenerator.generate(getApplication(), source)
             _uiState.update { it.copy(waveform = bars) }
+        }
+        viewModelScope.launch {
+            workManager.getWorkInfosForUniqueWorkFlow(AudioSplit.WORK_NAME).collect { observeSplit(it.firstOrNull()) }
+        }
+    }
+
+    fun onSplit() {
+        if (_uiState.value.splitting) return
+        player.pause()
+        splitInitiated = true
+        _uiState.update { it.copy(splitting = true, splitProgress = 0, savedCount = 0, error = null) }
+        val data = workDataOf(
+            AudioSplit.KEY_SOURCE to splitSource,
+            AudioSplit.KEY_START_MS to startMs,
+            AudioSplit.KEY_END_MS to endMs,
+            AudioSplit.KEY_SEGMENT_MS to _uiState.value.segmentMs,
+            AudioSplit.KEY_TITLE to _uiState.value.title,
+        )
+        workManager.enqueueUniqueWork(
+            AudioSplit.WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<AudioSplitWorker>().setInputData(data).build(),
+        )
+    }
+
+    fun onConsumeResult() = _uiState.update { it.copy(savedCount = 0, error = null) }
+
+    private fun observeSplit(info: WorkInfo?) {
+        if (!splitInitiated) return
+        when (info?.state) {
+            WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING ->
+                _uiState.update { it.copy(splitting = true, splitProgress = info.progress.getInt(AudioSplit.KEY_PROGRESS, it.splitProgress)) }
+            WorkInfo.State.SUCCEEDED -> {
+                splitInitiated = false
+                _uiState.update { it.copy(splitting = false, splitProgress = 100, savedCount = info.outputData.getInt(AudioSplit.KEY_COUNT, 0)) }
+            }
+            WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> {
+                splitInitiated = false
+                _uiState.update { it.copy(splitting = false, error = info.outputData.getString(AudioSplit.KEY_ERROR) ?: "Split failed") }
+            }
+            else -> Unit
         }
     }
 

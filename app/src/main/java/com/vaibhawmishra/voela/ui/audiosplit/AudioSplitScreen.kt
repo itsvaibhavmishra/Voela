@@ -28,9 +28,14 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,12 +76,27 @@ fun AudioSplitScreen(
     onPlayPause: () -> Unit,
     onPlayClip: (Int) -> Unit,
     onSplit: () -> Unit,
+    onConsumeResult: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val snackbar = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    LaunchedEffect(uiState.savedCount, uiState.error) {
+        when {
+            uiState.savedCount > 0 -> {
+                snackbar.showSnackbar(context.getString(R.string.audiosplit_saved, uiState.savedCount))
+                onConsumeResult()
+            }
+            uiState.error != null -> {
+                snackbar.showSnackbar(uiState.error)
+                onConsumeResult()
+            }
+        }
+    }
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
     Column(
-        modifier
+        Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 20.dp),
     ) {
@@ -125,8 +145,15 @@ fun AudioSplitScreen(
             color = TextSecondary,
         )
         Spacer(Modifier.height(12.dp))
-        PrimaryButton(text = stringResource(R.string.audiosplit_action), onClick = onSplit, enabled = uiState.clips.isNotEmpty())
+        PrimaryButton(
+            text = if (uiState.splitting) stringResource(R.string.audiosplit_splitting, uiState.splitProgress)
+                   else stringResource(R.string.audiosplit_action),
+            onClick = onSplit,
+            enabled = uiState.clips.isNotEmpty() && !uiState.splitting,
+        )
         Spacer(Modifier.height(8.dp))
+    }
+        SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.systemBars).padding(16.dp))
     }
 }
 

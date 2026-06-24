@@ -235,7 +235,8 @@ fun VoelaNavHost() {
                 onStepDown = viewModel::stepDown,
                 onPlayPause = viewModel::onPlayPause,
                 onPlayClip = viewModel::onPlayClip,
-                onSplit = { /* actual split + save wired next */ },
+                onSplit = viewModel::onSplit,
+                onConsumeResult = viewModel::onConsumeResult,
             )
         }
         composable(

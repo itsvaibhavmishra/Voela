@@ -108,6 +108,8 @@
     <string name="audiosplit_clip_n">Clip %1$d</string>
     <string name="audiosplit_save_note">Clips save to your library (Music/Voela/Audio Splits).</string>
     <string name="audiosplit_action">Split Audio</string>
+    <string name="audiosplit_splitting">Splitting… %1$d%%</string>
+    <string name="audiosplit_saved">Saved %1$d clips to Audio Splits</string>
     <string name="settings_title">Settings</string>
     <string name="settings_group_splitting">Splitting</string>
     <string name="settings_vocal_title">Split Vocals</string>
