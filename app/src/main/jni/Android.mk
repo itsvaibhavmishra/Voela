@@ -36,3 +36,11 @@ LOCAL_PATH := $(call my-dir)
     LOCAL_SRC_FILES := SourceSeparation.c
     LOCAL_LDLIBS := -llog -ldl
     include $(BUILD_SHARED_LIBRARY)
+
+    # DTTNet: KissFFT STFT/iSTFT + ONNX Runtime (dlopen libonnxruntime.so)
+    include $(CLEAR_VARS)
+    LOCAL_MODULE := voela-dtt
+    LOCAL_SRC_FILES := Dttnet.c kissfft/kiss_fft.c kissfft/kiss_fftr.c
+    LOCAL_C_INCLUDES := $(LOCAL_PATH)/kissfft $(LOCAL_PATH)/ort
+    LOCAL_LDLIBS := -llog -ldl -lm
+    include $(BUILD_SHARED_LIBRARY)

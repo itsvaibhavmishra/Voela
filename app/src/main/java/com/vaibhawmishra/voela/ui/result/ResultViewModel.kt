@@ -36,13 +36,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ResultViewModel(application: Application, title: String) : AndroidViewModel(application) {
+class ResultViewModel(application: Application, title: String, elapsedMs: Long) : AndroidViewModel(application) {
 
     private val player = ExoPlayer.Builder(application).build()
     private val workManager = WorkManager.getInstance(application)
     private val stamp = SimpleDateFormat("HHmmss", Locale.US).format(Date())
 
-    private val _uiState = MutableStateFlow(ResultUiState(title = title))
+    private val _uiState = MutableStateFlow(ResultUiState(title = title, elapsedMs = elapsedMs))
     val uiState: StateFlow<ResultUiState> = _uiState.asStateFlow()
 
     private var positionJob: Job? = null
@@ -176,8 +176,8 @@ class ResultViewModel(application: Application, title: String) : AndroidViewMode
     }
 
     companion object {
-        fun factory(title: String) = viewModelFactory {
-            initializer { ResultViewModel(this[APPLICATION_KEY]!!, title) }
+        fun factory(title: String, elapsedMs: Long) = viewModelFactory {
+            initializer { ResultViewModel(this[APPLICATION_KEY]!!, title, elapsedMs) }
         }
     }
 }

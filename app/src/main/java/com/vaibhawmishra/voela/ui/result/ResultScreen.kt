@@ -70,6 +70,12 @@ private fun clock(ms: Long): String {
     return "%d:%02d".format(s / 60, s % 60)
 }
 
+// "4s" or "1m 45s"
+private fun formatElapsed(ms: Long): String {
+    val s = ((ms + 500) / 1000).toInt()
+    return if (s < 60) "${s}s" else "${s / 60}m ${s % 60}s"
+}
+
 @Composable
 fun ResultScreen(
     uiState: ResultUiState,
@@ -99,6 +105,18 @@ fun ResultScreen(
             Text(stringResource(R.string.result_title), style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
             Spacer(Modifier.height(4.dp))
             Text(stringResource(R.string.result_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            if (uiState.elapsedMs > 0) {
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.CheckCircle, null, tint = DownloadGreen, modifier = Modifier.size(15.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.result_completed_in, formatElapsed(uiState.elapsedMs)),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = DownloadGreen,
+                    )
+                }
+            }
             Spacer(Modifier.height(20.dp))
 
             SummaryCard(uiState)

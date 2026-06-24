@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.formatDurationSeconds
 import com.vaibhawmishra.voela.ui.components.AppHeader
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.components.TrimWaveform
@@ -167,14 +168,30 @@ fun TrimAudioScreen(
                     EngineOption(
                         title = stringResource(R.string.engine_best),
                         description = stringResource(R.string.engine_best_desc),
-                        selected = false,
-                        enabled = false,
-                        onClick = {},
+                        selected = uiState.engine == SeparationEngine.BEST,
+                        enabled = true,
+                        onClick = { onEngineChange(SeparationEngine.BEST) },
                         modifier = Modifier.weight(1f),
                     )
                 }
             }
 
+            if (uiState.estimateSeconds > 0) {
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Outlined.Schedule, null, tint = TextSecondary, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        stringResource(R.string.trim_estimate, formatDurationSeconds(uiState.estimateSeconds)),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextSecondary,
+                    )
+                }
+            }
             Spacer(Modifier.height(16.dp))
             PrimaryButton(text = actionLabel, onClick = onProceed, enabled = uiState.endMs > uiState.startMs)
             Spacer(Modifier.height(8.dp))

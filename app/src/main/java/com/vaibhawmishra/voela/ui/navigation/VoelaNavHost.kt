@@ -40,14 +40,14 @@ private object Routes {
     const val LIBRARY = "library"
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
-    const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}"
-    const val RESULT = "result/{feature}/{name}"
+    const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
+    const val RESULT = "result/{feature}/{name}/{elapsed}"
     const val SPLIT = "split/{name}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun trim(feature: String, name: String, source: String) = "trim/$feature/${Uri.encode(name)}/${Uri.encode(source)}"
-    fun process(feature: String, name: String, source: String, start: Long, end: Long) =
-        "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end"
-    fun result(feature: String, name: String) = "result/$feature/${Uri.encode(name)}"
+    fun process(feature: String, name: String, source: String, start: Long, end: Long, engine: String) =
+        "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end/$engine"
+    fun result(feature: String, name: String, elapsedMs: Long) = "result/$feature/${Uri.encode(name)}/$elapsedMs"
     fun split(name: String) = "split/${Uri.encode(name)}"
 }
 
@@ -139,7 +139,7 @@ fun VoelaNavHost() {
                 onEndStep = viewModel::onEndStep,
                 onEngineChange = viewModel::onEngineChange,
                 onProceed = {
-                    navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs))
+                    navController.navigate(Routes.process(state.feature.key, name, source, state.startMs, state.endMs, state.engine.name.lowercase()))
                 },
             )
         }
@@ -151,6 +151,7 @@ fun VoelaNavHost() {
                 navArgument("source") { type = NavType.StringType },
                 navArgument("start") { type = NavType.LongType },
                 navArgument("end") { type = NavType.LongType },
+                navArgument("engine") { type = NavType.StringType },
             ),
         ) { entry ->
             val feature = TrimFeature.from(entry.arguments?.getString("feature"))
@@ -158,11 +159,12 @@ fun VoelaNavHost() {
             val source = entry.arguments?.getString("source").orEmpty()
             val start = entry.arguments?.getLong("start") ?: 0L
             val end = entry.arguments?.getLong("end") ?: 0L
-            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature, source, start, end))
+            val engine = entry.arguments?.getString("engine").orEmpty()
+            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature, source, start, end, engine))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(state.isComplete) {
                 if (state.isComplete) {
-                    navController.navigate(Routes.result(feature.key, name)) {
+                    navController.navigate(Routes.result(feature.key, name, state.elapsedMs)) {
                         popUpTo(Routes.PROCESS) { inclusive = true }
                     }
                 }
@@ -177,10 +179,12 @@ fun VoelaNavHost() {
             arguments = listOf(
                 navArgument("feature") { type = NavType.StringType },
                 navArgument("name") { type = NavType.StringType },
+                navArgument("elapsed") { type = NavType.LongType },
             ),
         ) { entry ->
             val name = entry.arguments?.getString("name").orEmpty()
-            val viewModel: ResultViewModel = viewModel(factory = ResultViewModel.factory(name))
+            val elapsed = entry.arguments?.getLong("elapsed") ?: 0L
+            val viewModel: ResultViewModel = viewModel(factory = ResultViewModel.factory(name, elapsed))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             ResultScreen(
                 uiState = state,

@@ -9,14 +9,20 @@ object VocalSeparation {
     const val KEY_SOURCE = "source"
     const val KEY_START_MS = "start_ms"
     const val KEY_END_MS = "end_ms"
+    const val KEY_ENGINE = "engine"
     const val KEY_PROGRESS = "progress"
+    const val KEY_ELAPSED_MS = "elapsed_ms"
     const val KEY_ERROR = "error"
+
+    const val ENGINE_FAST = "fast" // Spleeter
+    const val ENGINE_BEST = "best" // DTTNet
 
     // Where the separated stems are written (and read by the result screen)
     fun outputDir(context: Context): File = File(context.getExternalFilesDir(null), "separation")
 
-    // Spleeter fp16 model files, cached on device
+    // Model files, cached on device
     fun modelDir(context: Context): File = File(context.getExternalFilesDir(null), "models")
     fun vocalsModel(context: Context): File = File(modelDir(context), "vocals.fp16.onnx")
     fun accompModel(context: Context): File = File(modelDir(context), "accompaniment.fp16.onnx")
+    fun dttModel(context: Context): File = File(modelDir(context), "dttnet_vocals.onnx")
 }

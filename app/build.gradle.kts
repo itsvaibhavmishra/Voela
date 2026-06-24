@@ -17,8 +17,8 @@ android {
         applicationId = "com.vaibhawmishra.voela"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -36,11 +36,14 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Signed with the debug key so this test build is sideloadable
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -76,7 +79,9 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation("com.github.k2-fsa:sherpa-onnx:v1.13.3")
     implementation(libs.youtubedl.android.library)
-    implementation(libs.youtubedl.android.ffmpeg)
+    // NOTE: youtubedl-android-ffmpeg intentionally omitted — we download a single
+    // pre-muxed audio stream (no merge/transcode) and export MP3 via bundled LAME,
+    // so yt-dlp never needs ffmpeg. Saves ~34 MB. Re-add if a feature needs muxing.
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.transformer)
     implementation(libs.androidx.media3.common)

@@ -10,7 +10,13 @@ object SourceSeparator {
     }
 
     // Create the engine once (returns a handle, 0 on failure); pass uvrModel = "" for Spleeter.
-    external fun nativeCreate(vocalsModel: String, accompModel: String, uvrModel: String): Long
+    external fun nativeCreate(
+        vocalsModel: String,
+        accompModel: String,
+        uvrModel: String,
+        provider: String,
+        numThreads: Int,
+    ): Long
 
     // Separate one chunk → [vocals, accompaniment] interleaved; null on failure.
     external fun nativeProcess(

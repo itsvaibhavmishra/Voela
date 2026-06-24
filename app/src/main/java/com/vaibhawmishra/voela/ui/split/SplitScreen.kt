@@ -1,6 +1,9 @@
 package com.vaibhawmishra.voela.ui.split
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,10 +21,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,8 +34,9 @@ import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.FlowingWaveform
 import com.vaibhawmishra.voela.ui.components.OnDeviceFooter
+import com.vaibhawmishra.voela.ui.components.SmoothProgressBar
+import com.vaibhawmishra.voela.ui.formatDurationSeconds
 import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 import com.vaibhawmishra.voela.ui.trim.TrimFeature
@@ -84,11 +88,7 @@ fun SplitScreen(
             )
             Spacer(Modifier.height(28.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(CircleShape).background(Purple))
-                Spacer(Modifier.width(8.dp))
-                Text(phaseLabel, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-            }
+            Text(phaseLabel, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
             Spacer(Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 for (i in 0..2) {
@@ -102,14 +102,22 @@ fun SplitScreen(
             }
             Spacer(Modifier.height(22.dp))
 
-            Text("${uiState.progress}%", style = MaterialTheme.typography.headlineSmall, color = Purple)
-            Spacer(Modifier.height(12.dp))
-            LinearProgressIndicator(
-                progress = { uiState.progress / 100f },
-                modifier = Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
-                color = Purple,
-                trackColor = SurfaceElevated,
+            val animatedPercent by animateIntAsState(
+                targetValue = uiState.progress,
+                animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
+                label = "percent",
             )
+            Text("$animatedPercent%", style = MaterialTheme.typography.headlineSmall, color = Purple)
+            Spacer(Modifier.height(14.dp))
+            SmoothProgressBar(uiState.progress / 100f, Modifier.fillMaxWidth())
+            if (!uiState.isComplete && uiState.etaSeconds > 0) {
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    stringResource(R.string.split_time_left, formatDurationSeconds(uiState.etaSeconds)),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary,
+                )
+            }
 
             Spacer(Modifier.weight(1f))
             OnDeviceFooter()

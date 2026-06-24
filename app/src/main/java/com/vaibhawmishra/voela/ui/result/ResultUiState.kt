@@ -11,6 +11,7 @@ data class StemUi(
 
 data class ResultUiState(
     val title: String = "",
+    val elapsedMs: Long = 0,
     val sampleRate: Int = 0,
     val stems: List<StemUi> = emptyList(),
     val playingIndex: Int = -1,

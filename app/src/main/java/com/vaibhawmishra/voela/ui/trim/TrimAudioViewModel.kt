@@ -11,6 +11,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.vaibhawmishra.voela.data.audio.AudioMetadataReader
+import com.vaibhawmishra.voela.data.audio.EngineStats
+import com.vaibhawmishra.voela.data.audio.VocalSeparation
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
 import java.io.File
 import kotlinx.coroutines.Job
@@ -73,21 +75,29 @@ class TrimAudioViewModel(
         if (dur <= 0) return
         val newStart = (startFraction * dur).toLong().coerceIn(0, dur)
         val startMoved = newStart != _uiState.value.startMs
-        _uiState.update { it.copy(startMs = newStart, endMs = (endFraction * dur).toLong().coerceIn(0, dur)) }
+        _uiState.update { it.copy(startMs = newStart, endMs = (endFraction * dur).toLong().coerceIn(0, dur)).withEstimate() }
         if (startMoved) seekToStart(newStart)
     }
 
     fun onStartStep(deltaMs: Long) {
         val newStart = (_uiState.value.startMs + deltaMs).coerceIn(0, _uiState.value.endMs - MIN_RANGE_MS)
-        _uiState.update { it.copy(startMs = newStart) }
+        _uiState.update { it.copy(startMs = newStart).withEstimate() }
         seekToStart(newStart)
     }
 
     fun onEndStep(deltaMs: Long) = _uiState.update {
-        it.copy(endMs = (it.endMs + deltaMs).coerceIn(it.startMs + MIN_RANGE_MS, it.durationMs))
+        it.copy(endMs = (it.endMs + deltaMs).coerceIn(it.startMs + MIN_RANGE_MS, it.durationMs)).withEstimate()
     }
 
-    fun onEngineChange(engine: SeparationEngine) = _uiState.update { it.copy(engine = engine) }
+    fun onEngineChange(engine: SeparationEngine) = _uiState.update { it.copy(engine = engine).withEstimate() }
+
+    // Approx processing time for the current selection on the chosen engine, using the
+    // device's learned real-time factor.
+    private fun TrimAudioUiState.withEstimate(): TrimAudioUiState {
+        val audioMs = (endMs - startMs).coerceAtLeast(0)
+        val key = if (engine == SeparationEngine.BEST) VocalSeparation.ENGINE_BEST else VocalSeparation.ENGINE_FAST
+        return copy(estimateSeconds = (EngineStats.estimateMs(getApplication(), key, audioMs) / 1000).toInt())
+    }
 
     // Moving the start always repositions playback to it, so playback runs from the new start
     private fun seekToStart(startMs: Long) {
@@ -99,7 +109,7 @@ class TrimAudioViewModel(
         if (durationMs <= 0) return
         _uiState.update {
             if (it.durationMs > 0) it
-            else it.copy(durationMs = durationMs, endMs = if (it.endMs == 0L) durationMs else it.endMs)
+            else it.copy(durationMs = durationMs, endMs = if (it.endMs == 0L) durationMs else it.endMs).withEstimate()
         }
     }
 
@@ -132,7 +142,7 @@ class TrimAudioViewModel(
                     sampleRate = formatSampleRate(meta.sampleRateHz),
                     durationMs = if (it.durationMs > 0) it.durationMs else meta.durationMs,
                     endMs = if (it.endMs == 0L) meta.durationMs else it.endMs,
-                )
+                ).withEstimate()
             }
         }
     }

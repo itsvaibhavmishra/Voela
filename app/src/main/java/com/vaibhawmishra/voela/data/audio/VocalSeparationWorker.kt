@@ -14,8 +14,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 // Foreground job: separate the trimmed [start, end] region into vocals.wav +
-// instrumental.wav. Processed in chunks (with a little context each side) so a long
-// track stays within memory, streaming each chunk's stems straight to disk.
+// instrumental.wav.
+//   Fast  -> Spleeter (sherpa-onnx), chunked with a little context each side.
+//   Best  -> DTTNet, run at its fixed 44.1 kHz / 261120-sample window with
+//            overlap-discard between windows; instrumental = mix - vocals.
 class VocalSeparationWorker(
     appContext: Context,
     params: WorkerParameters,
@@ -29,16 +31,16 @@ class VocalSeparationWorker(
         val source = inputData.getString(VocalSeparation.KEY_SOURCE) ?: return Result.failure()
         val startMs = inputData.getLong(VocalSeparation.KEY_START_MS, 0)
         var endMs = inputData.getLong(VocalSeparation.KEY_END_MS, 0)
+        val best = inputData.getString(VocalSeparation.KEY_ENGINE) == VocalSeparation.ENGINE_BEST
 
         setForeground(notifications.separatingForegroundInfo(0))
         return try {
             withContext(Dispatchers.IO) {
-                ensureModels()
                 if (endMs <= startMs) endMs = AudioMetadataReader.read(applicationContext, source).durationMs
                 if (endMs <= startMs) error("Empty selection")
-                separate(source, startMs, endMs)
+                val elapsed = if (best) separateDtt(source, startMs, endMs) else separateFast(source, startMs, endMs)
                 report(100)
-                Result.success()
+                Result.success(workDataOf(VocalSeparation.KEY_ELAPSED_MS to elapsed))
             }
         } catch (t: Throwable) {
             Log.e("VocalSeparation", "separation failed", t)
@@ -46,20 +48,108 @@ class VocalSeparationWorker(
         }
     }
 
-    private fun separate(source: String, startMs: Long, endMs: Long) {
-        val outDir = VocalSeparation.outputDir(applicationContext).apply {
-            mkdirs()
-            listFiles()?.forEach { it.delete() }
+    // --- Best: DTTNet -------------------------------------------------------
+
+    private fun separateDtt(source: String, startMs: Long, endMs: Long): Long {
+        val outDir = freshOutDir()
+        val model = ensureDttModel()
+
+        // Estimate window count for progress (DTTNet runs at 44.1 kHz).
+        val approxFrames = (endMs - startMs) * 44100 / 1000
+        val chunk = DttSeparator.CHUNK
+        val step = chunk - 2 * DTT_TRIM
+        val totalChunks = ((approxFrames + step - 1) / step).toInt().coerceAtLeast(1)
+
+        val handle = DttSeparator.nativeCreate(model.absolutePath)
+        if (handle == 0L) error("Engine init failed")
+
+        // Stream the selection at 44.1 kHz stereo through a sliding window so memory stays
+        // at ~one window (≈2 MB) regardless of track length. Each window's edges (DTT_TRIM
+        // frames) are discarded and recomputed by the neighbouring window (overlap-discard).
+        val stream = Pcm44Stream(applicationContext, source, startMs, endMs)
+        val window = FloatArray(chunk * 2)
+        var vocals: WavWriter? = null
+        var instrumental: WavWriter? = null
+        val t0 = System.currentTimeMillis()
+        try {
+            var first = true
+            var c = 0
+            var valid = stream.readInto(window, 0, chunk)
+            while (valid > 0) {
+                if (valid < chunk) java.util.Arrays.fill(window, valid * 2, chunk * 2, 0f)
+                val voc = DttSeparator.nativeProcess(handle, window) ?: error("Separation failed")
+                val last = valid < chunk
+
+                if (vocals == null) {
+                    vocals = WavWriter(File(outDir, "vocals.wav"), 2, 44100)
+                    instrumental = WavWriter(File(outDir, "instrumental.wav"), 2, 44100)
+                }
+                val writeStart = if (first) 0 else DTT_TRIM
+                val writeEnd = if (last) valid else chunk - DTT_TRIM
+                val writeCount = writeEnd - writeStart
+                if (writeCount > 0) {
+                    val inst = FloatArray(writeCount * 2)
+                    val base = writeStart * 2
+                    for (i in 0 until writeCount * 2) inst[i] = window[base + i] - voc[base + i]
+                    vocals!!.append(voc, writeStart, writeCount)
+                    instrumental!!.append(inst, 0, writeCount)
+                }
+
+                report(((c + 1) * 95 / totalChunks).coerceIn(1, 95))
+                if (last) break
+                // Slide: keep the last 2*DTT_TRIM frames as the next window's left overlap.
+                System.arraycopy(window, step * 2, window, 0, 2 * DTT_TRIM * 2)
+                val got = stream.readInto(window, 2 * DTT_TRIM, step)
+                valid = 2 * DTT_TRIM + got
+                first = false
+                c++
+            }
+        } finally {
+            vocals?.close()
+            instrumental?.close()
+            stream.close()
+            DttSeparator.nativeDestroy(handle)
         }
+        return System.currentTimeMillis() - t0
+    }
+
+    // Make sure the DTTNet ONNX is on disk. Bundled in assets for now; falls back to a
+    // remote download once the model is hosted (then the asset can be dropped to slim the APK).
+    private fun ensureDttModel(): File {
+        val model = VocalSeparation.dttModel(applicationContext)
+        if (model.exists() && model.length() > 0) return model
+        model.parentFile?.mkdirs()
+        val tmp = File(model.parentFile, "${model.name}.part")
+        val fromAsset = try {
+            applicationContext.assets.open(DTT_ASSET).use { input ->
+                tmp.outputStream().use { input.copyTo(it, 256 * 1024) }
+            }
+            tmp.renameTo(model)
+        } catch (_: Throwable) {
+            tmp.delete(); false
+        }
+        if (!fromAsset) download(DTT_MODEL_URL, model)
+        return model
+    }
+
+    // --- Fast: Spleeter -----------------------------------------------------
+
+    private fun separateFast(source: String, startMs: Long, endMs: Long): Long {
+        val outDir = freshOutDir()
+        download(VOCALS_URL, VocalSeparation.vocalsModel(applicationContext))
+        download(ACCOMP_URL, VocalSeparation.accompModel(applicationContext))
         val handle = SourceSeparator.nativeCreate(
             VocalSeparation.vocalsModel(applicationContext).absolutePath,
             VocalSeparation.accompModel(applicationContext).absolutePath,
             "",
+            "cpu",
+            2,
         )
         if (handle == 0L) error("Engine init failed")
 
         var vocals: WavWriter? = null
         var instrumental: WavWriter? = null
+        val t0 = System.currentTimeMillis()
         try {
             val chunks = ((endMs - startMs + CHUNK_MS - 1) / CHUNK_MS).toInt().coerceAtLeast(1)
             for (c in 0 until chunks) {
@@ -72,16 +162,20 @@ class VocalSeparationWorker(
                 if (pcm.frames == 0) continue
                 val stems = SourceSeparator.nativeProcess(handle, pcm.samples, pcm.channels, pcm.frames, pcm.rate)
                     ?: error("Separation failed")
+                val vocalsArr = stems[0]
+                val instArr = if (stems.size >= 2) stems[1] else FloatArray(vocalsArr.size) {
+                    (pcm.samples[it] - vocalsArr[it]).coerceIn(-1f, 1f)
+                }
 
                 if (vocals == null) {
                     vocals = WavWriter(File(outDir, "vocals.wav"), pcm.channels, pcm.rate)
                     instrumental = WavWriter(File(outDir, "instrumental.wav"), pcm.channels, pcm.rate)
                 }
-                val outFrames = stems[0].size / pcm.channels
+                val outFrames = vocalsArr.size / pcm.channels
                 val skip = ((wStart - dStart) * pcm.rate / 1000).toInt().coerceIn(0, outFrames)
                 val writeFrames = ((wEnd - wStart) * pcm.rate / 1000).toInt().coerceAtMost(outFrames - skip)
-                vocals!!.append(stems[0], skip, writeFrames)
-                instrumental!!.append(stems[1], skip, writeFrames)
+                vocals!!.append(vocalsArr, skip, writeFrames)
+                instrumental!!.append(instArr, skip, writeFrames)
 
                 report(((c + 1) * 95 / chunks).coerceIn(1, 95))
             }
@@ -90,16 +184,19 @@ class VocalSeparationWorker(
             instrumental?.close()
             SourceSeparator.nativeDestroy(handle)
         }
+        return System.currentTimeMillis() - t0
+    }
+
+    // --- shared -------------------------------------------------------------
+
+    private fun freshOutDir(): File = VocalSeparation.outputDir(applicationContext).apply {
+        mkdirs()
+        listFiles()?.forEach { it.delete() }
     }
 
     private fun report(percent: Int) {
         setProgressAsync(workDataOf(VocalSeparation.KEY_PROGRESS to percent))
         notifications.updateSeparating(percent)
-    }
-
-    private fun ensureModels() {
-        download(VOCALS_URL, VocalSeparation.vocalsModel(applicationContext))
-        download(ACCOMP_URL, VocalSeparation.accompModel(applicationContext))
     }
 
     private fun download(url: String, dest: File) {
@@ -121,10 +218,14 @@ class VocalSeparationWorker(
     }
 
     companion object {
-        private const val CHUNK_MS = 30_000L
+        private const val CHUNK_MS = 30_000L // Spleeter
         private const val CTX_MS = 1_000L
+        private const val DTT_TRIM = 4_096 // frames discarded at each window edge (overlap-discard)
         private const val BASE = "https://huggingface.co/csukuangfj/sherpa-onnx-spleeter-2stems-fp16/resolve/main"
         private const val VOCALS_URL = "$BASE/vocals.fp16.onnx"
         private const val ACCOMP_URL = "$BASE/accompaniment.fp16.onnx"
+        private const val DTT_ASSET = "dttnet_vocals.onnx" // bundled in app/src/main/assets
+        // TODO: once the 23.5 MB ONNX is hosted, point this at it and drop the bundled asset.
+        private const val DTT_MODEL_URL = "https://example.com/dttnet_vocals.onnx"
     }
 }

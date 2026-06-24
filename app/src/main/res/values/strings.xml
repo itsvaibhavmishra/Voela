@@ -66,7 +66,8 @@
     <string name="engine_fast">Fast</string>
     <string name="engine_fast_desc">Quick, good for most</string>
     <string name="engine_best">Best quality</string>
-    <string name="engine_best_desc">Coming soon</string>
+    <string name="engine_best_desc">Sharper, takes longer</string>
+    <string name="trim_estimate">Estimated ~%1$s to process</string>
     <string name="cd_step_up">Increase</string>
     <string name="cd_step_down">Decrease</string>
     <string name="cd_linked">Linked</string>
@@ -78,10 +79,12 @@
     <string name="split_phase_preparing">Preparing…</string>
     <string name="split_phase_separating">Separating frequencies…</string>
     <string name="split_phase_finishing">Almost done…</string>
+    <string name="split_time_left">~%1$s left</string>
 
     <!-- Result screen -->
     <string name="result_title">Separation Results</string>
     <string name="result_subtitle">Your audio has been split into vocals and instrumental.</string>
+    <string name="result_completed_in">Completed in %1$s</string>
     <string name="result_library_title">Saved stems appear in your library</string>
     <string name="result_library_desc">Use the download icon to keep a stem.</string>
     <string name="saved_to_vocal_splits">Saved to Vocal Splits</string>
