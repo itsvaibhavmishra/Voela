@@ -9,4 +9,5 @@ data class SplitUiState(
     val failed: Boolean = false,
     val elapsedMs: Long = 0,
     val etaSeconds: Int = -1, // estimated time remaining; -1 = unknown (hide)
+    val libraryId: String = "", // set on success for vocal splits (kept in the library)
 )

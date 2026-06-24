@@ -32,6 +32,7 @@ class SplitViewModel(
     startMs: Long,
     endMs: Long,
     engine: String,
+    title: String,
 ) : AndroidViewModel(application) {
 
     private val workManager = WorkManager.getInstance(application)
@@ -57,6 +58,8 @@ class SplitViewModel(
             VocalSeparation.KEY_START_MS to startMs,
             VocalSeparation.KEY_END_MS to endMs,
             VocalSeparation.KEY_ENGINE to engine,
+            VocalSeparation.KEY_TITLE to title,
+            VocalSeparation.KEY_FEATURE to feature.key,
         )
         workManager.enqueueUniqueWork(
             VocalSeparation.WORK_NAME,
@@ -99,8 +102,9 @@ class SplitViewModel(
             WorkInfo.State.SUCCEEDED -> {
                 workDone = true
                 val elapsed = info.outputData.getLong(VocalSeparation.KEY_ELAPSED_MS, 0)
+                val libId = info.outputData.getString(VocalSeparation.KEY_LIBRARY_ID).orEmpty()
                 if (elapsed > 0) EngineStats.record(getApplication(), engine, elapsed, audioMs)
-                _uiState.update { it.copy(progress = maxOf(it.progress, 95), elapsedMs = elapsed, etaSeconds = 0) }
+                _uiState.update { it.copy(progress = maxOf(it.progress, 95), elapsedMs = elapsed, etaSeconds = 0, libraryId = libId) }
                 maybeComplete()
             }
             WorkInfo.State.FAILED, WorkInfo.State.CANCELLED -> _uiState.update { it.copy(failed = true) }
@@ -129,8 +133,8 @@ class SplitViewModel(
     companion object {
         private const val MIN_DISPLAY_MS = 10_000L
 
-        fun factory(feature: TrimFeature, source: String, startMs: Long, endMs: Long, engine: String) = viewModelFactory {
-            initializer { SplitViewModel(this[APPLICATION_KEY]!!, feature, source, startMs, endMs, engine) }
+        fun factory(feature: TrimFeature, source: String, startMs: Long, endMs: Long, engine: String, title: String) = viewModelFactory {
+            initializer { SplitViewModel(this[APPLICATION_KEY]!!, feature, source, startMs, endMs, engine, title) }
         }
     }
 }

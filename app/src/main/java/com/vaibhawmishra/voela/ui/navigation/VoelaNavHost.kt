@@ -20,10 +20,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.vaibhawmishra.voela.ui.components.PlaceholderScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureScreen
 import com.vaibhawmishra.voela.ui.feature.SelectFeatureViewModel
 import com.vaibhawmishra.voela.ui.home.HomeScreen
+import com.vaibhawmishra.voela.ui.home.HomeViewModel
+import com.vaibhawmishra.voela.ui.library.LibraryScreen
+import com.vaibhawmishra.voela.ui.library.LibraryViewModel
 import com.vaibhawmishra.voela.ui.result.ResultScreen
 import com.vaibhawmishra.voela.ui.result.ResultViewModel
 import com.vaibhawmishra.voela.ui.split.SplitScreen
@@ -36,19 +38,28 @@ import com.vaibhawmishra.voela.ui.youtube.YouTubeViewModel
 
 private object Routes {
     const val HOME = "home"
-    const val YOUTUBE = "youtube"
+    const val YOUTUBE = "youtube?lib={lib}"
     const val LIBRARY = "library"
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
-    const val RESULT = "result/{feature}/{name}/{elapsed}"
-    const val SPLIT = "split/{name}"
+    const val RESULT = "result/{feature}/{name}/{elapsed}?lib={lib}"
+    fun youtube(lib: String = "") = "youtube?lib=${Uri.encode(lib)}"
     fun feature(name: String, source: String) = "feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun trim(feature: String, name: String, source: String) = "trim/$feature/${Uri.encode(name)}/${Uri.encode(source)}"
     fun process(feature: String, name: String, source: String, start: Long, end: Long, engine: String) =
         "process/$feature/${Uri.encode(name)}/${Uri.encode(source)}/$start/$end/$engine"
-    fun result(feature: String, name: String, elapsedMs: Long) = "result/$feature/${Uri.encode(name)}/$elapsedMs"
-    fun split(name: String) = "split/${Uri.encode(name)}"
+    fun result(feature: String, name: String, elapsedMs: Long, lib: String = "") =
+        "result/$feature/${Uri.encode(name)}/$elapsedMs?lib=${Uri.encode(lib)}"
+}
+
+// Open a kept library item: extractions reopen on the YouTube screen, vocal splits on Results.
+private fun openLibraryItem(navController: androidx.navigation.NavController, item: com.vaibhawmishra.voela.ui.home.RecentAudio) {
+    if (item.type == com.vaibhawmishra.voela.ui.home.ProcessType.EXTRACTION) {
+        navController.navigate(Routes.youtube(item.id))
+    } else {
+        navController.navigate(Routes.result(com.vaibhawmishra.voela.ui.trim.TrimFeature.VOCALS.key, item.title, 0L, item.id))
+    }
 }
 
 @Composable
@@ -65,19 +76,25 @@ fun VoelaNavHost() {
     ) {
         composable(Routes.HOME) {
             val context = LocalContext.current
+            val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)
+            val recents by homeViewModel.recents.collectAsStateWithLifecycle()
             val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 uri?.let { navController.navigate(Routes.feature(displayName(context, it), it.toString())) }
             }
             HomeScreen(
-                recents = emptyList(),
+                recents = recents,
                 onChooseFile = { picker.launch("audio/*") },
-                onYouTubeUrl = { navController.navigate(Routes.YOUTUBE) },
+                onYouTubeUrl = { navController.navigate(Routes.youtube()) },
                 onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
-                onRecentClick = { navController.navigate(Routes.split(it.title)) },
+                onRecentClick = { openLibraryItem(navController, it) },
             )
         }
-        composable(Routes.YOUTUBE) {
-            val viewModel: YouTubeViewModel = viewModel(factory = YouTubeViewModel.Factory)
+        composable(
+            Routes.YOUTUBE,
+            arguments = listOf(navArgument("lib") { type = NavType.StringType; defaultValue = "" }),
+        ) { entry ->
+            val lib = entry.arguments?.getString("lib").orEmpty()
+            val viewModel: YouTubeViewModel = viewModel(factory = YouTubeViewModel.factory(lib))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             YouTubeUrlScreen(
                 uiState = state,
@@ -95,7 +112,13 @@ fun VoelaNavHost() {
             )
         }
         composable(Routes.LIBRARY) {
-            PlaceholderScreen(title = "Library", onBack = navController::popBackStack)
+            val viewModel: LibraryViewModel = viewModel(factory = LibraryViewModel.Factory)
+            val items by viewModel.items.collectAsStateWithLifecycle()
+            LibraryScreen(
+                items = items,
+                onBack = navController::popBackStack,
+                onItemClick = { openLibraryItem(navController, it) },
+            )
         }
         composable(
             Routes.FEATURE,
@@ -160,11 +183,11 @@ fun VoelaNavHost() {
             val start = entry.arguments?.getLong("start") ?: 0L
             val end = entry.arguments?.getLong("end") ?: 0L
             val engine = entry.arguments?.getString("engine").orEmpty()
-            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature, source, start, end, engine))
+            val viewModel: SplitViewModel = viewModel(factory = SplitViewModel.factory(feature, source, start, end, engine, name))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(state.isComplete) {
                 if (state.isComplete) {
-                    navController.navigate(Routes.result(feature.key, name, state.elapsedMs)) {
+                    navController.navigate(Routes.result(feature.key, name, state.elapsedMs, state.libraryId)) {
                         popUpTo(Routes.PROCESS) { inclusive = true }
                     }
                 }
@@ -180,11 +203,13 @@ fun VoelaNavHost() {
                 navArgument("feature") { type = NavType.StringType },
                 navArgument("name") { type = NavType.StringType },
                 navArgument("elapsed") { type = NavType.LongType },
+                navArgument("lib") { type = NavType.StringType; defaultValue = "" },
             ),
         ) { entry ->
             val name = entry.arguments?.getString("name").orEmpty()
             val elapsed = entry.arguments?.getLong("elapsed") ?: 0L
-            val viewModel: ResultViewModel = viewModel(factory = ResultViewModel.factory(name, elapsed))
+            val lib = entry.arguments?.getString("lib").orEmpty()
+            val viewModel: ResultViewModel = viewModel(factory = ResultViewModel.factory(name, elapsed, lib))
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             ResultScreen(
                 uiState = state,
@@ -193,13 +218,6 @@ fun VoelaNavHost() {
                 onSeek = viewModel::onSeek,
                 onSave = viewModel::onSave,
                 onMessageShown = viewModel::onMessageShown,
-            )
-        }
-        composable(Routes.SPLIT, arguments = listOf(navArgument("name") { type = NavType.StringType })) { entry ->
-            PlaceholderScreen(
-                title = "Splitting Screen",
-                subtitle = entry.arguments?.getString("name").orEmpty(),
-                onBack = navController::popBackStack,
             )
         }
     }

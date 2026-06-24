@@ -16,6 +16,7 @@ import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.data.audio.AudioSave
 import com.vaibhawmishra.voela.data.audio.VoelaStorage
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
+import com.vaibhawmishra.voela.data.library.LibraryStore
 import com.vaibhawmishra.voela.data.youtube.Extraction
 import com.vaibhawmishra.voela.data.youtube.ExtractionRepository
 import com.vaibhawmishra.voela.data.youtube.RecentLinksStore
@@ -27,14 +28,17 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class YouTubeViewModel(application: Application) : AndroidViewModel(application) {
+class YouTubeViewModel(application: Application, libraryId: String = "") : AndroidViewModel(application) {
 
     private val repository = ExtractionRepository(application)
     private val recentLinksStore = RecentLinksStore(application)
+    private val libraryStore = LibraryStore(application)
     private val player = ExoPlayer.Builder(application).build()
+    @Volatile private var restoredLib = false
 
     private val _uiState = MutableStateFlow(YouTubeUiState())
     val uiState: StateFlow<YouTubeUiState> = _uiState.asStateFlow()
@@ -64,6 +68,31 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch { repository.workInfo.collect(::applyWorkInfo) }
         viewModelScope.launch { repository.saveWorkInfo.collect(::applySaveInfo) }
         viewModelScope.launch { recentLinksStore.recents.collect { links -> _uiState.update { it.copy(recentLinks = links) } } }
+        if (libraryId.isNotBlank()) {
+            restoredLib = true
+            viewModelScope.launch { restore(libraryId) }
+        }
+    }
+
+    // Reopen a kept extraction from the library: show it as a Done result, ready to play/continue.
+    private suspend fun restore(libraryId: String) {
+        val item = libraryStore.items.first().firstOrNull { it.id == libraryId } ?: return
+        val file = libraryStore.extractionFile(item)
+        if (!file.exists()) return
+        val path = file.absolutePath
+        _uiState.update {
+            it.copy(
+                status = ExtractionStatus.Done,
+                progress = 100,
+                result = ExtractedAudio(item.title, path, waveformBars(path.hashCode())),
+                isPlaying = false,
+                positionMs = 0,
+                durationMs = 0,
+            )
+        }
+        player.setMediaItem(MediaItem.fromUri(Uri.fromFile(file)))
+        player.prepare()
+        loadWaveform(path)
     }
 
     fun onUrlChange(url: String) = _uiState.update { it.copy(url = url) }
@@ -172,6 +201,9 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
     }
 
     private fun applyWorkInfo(info: WorkInfo?) {
+        // When we've restored a kept extraction, ignore stale finished jobs so they don't
+        // clobber the restored result — until the user starts a fresh extraction.
+        if (restoredLib && !extractInitiated) return
         when (info?.state) {
             WorkInfo.State.ENQUEUED, WorkInfo.State.BLOCKED ->
                 _uiState.update { it.copy(status = ExtractionStatus.Processing, progress = 0) }
@@ -187,8 +219,11 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
                 // (e.g. on app relaunch) must not resurrect a recent the user cleared
                 if (extractInitiated && sourceUrl.isNotBlank()) {
                     extractInitiated = false
-                    val duration = formatDuration(info.outputData.getInt(Extraction.KEY_DURATION, 0))
-                    viewModelScope.launch { recentLinksStore.add(RecentLink(title, duration, sourceUrl)) }
+                    val durationSec = info.outputData.getInt(Extraction.KEY_DURATION, 0)
+                    viewModelScope.launch { recentLinksStore.add(RecentLink(title, formatDuration(durationSec), sourceUrl)) }
+                    if (path.isNotBlank()) {
+                        viewModelScope.launch { libraryStore.addExtraction(File(path), title, durationSec.toLong() * 1000) }
+                    }
                 }
                 // Show Done immediately with a placeholder; the real waveform is decoded async
                 _uiState.update {
@@ -232,8 +267,8 @@ class YouTubeViewModel(application: Application) : AndroidViewModel(application)
     }
 
     companion object {
-        val Factory = viewModelFactory {
-            initializer { YouTubeViewModel(this[APPLICATION_KEY]!!) }
+        fun factory(libraryId: String = "") = viewModelFactory {
+            initializer { YouTubeViewModel(this[APPLICATION_KEY]!!, libraryId) }
         }
     }
 }

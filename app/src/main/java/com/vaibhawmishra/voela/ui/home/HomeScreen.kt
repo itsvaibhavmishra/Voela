@@ -32,7 +32,6 @@ import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -62,18 +61,18 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vaibhawmishra.voela.R
-import com.vaibhawmishra.voela.ui.components.Waveform
-import com.vaibhawmishra.voela.ui.components.waveformBars
+import com.vaibhawmishra.voela.ui.components.TypeChip
+import com.vaibhawmishra.voela.ui.components.TypeIconTile
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.VoelaTheme
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
 import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.ShareBlue
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
+import com.vaibhawmishra.voela.ui.theme.YouTubeRed
 import com.vaibhawmishra.voela.ui.theme.VocalsAmber
 import com.vaibhawmishra.voela.ui.theme.Warning
 
@@ -111,7 +110,7 @@ fun HomeScreen(
                 onClick = onYouTubeUrl,
             )
         }
-        Spacer(Modifier.height(32.dp))
+        Spacer(Modifier.height(44.dp))
         RecentsHeader(showViewAll = recents.isNotEmpty(), onViewAll = onOpenLibrary)
         Spacer(Modifier.height(12.dp))
         if (recents.isEmpty()) {
@@ -211,7 +210,6 @@ private fun RecentsHeader(showViewAll: Boolean, onViewAll: () -> Unit) {
 
 @Composable
 private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
-    val accent = if (item.type == ProcessType.VOCAL_REMOVAL) Purple else InstrumentalTeal
     var menuExpanded by remember { mutableStateOf(false) }
     Row(
         Modifier
@@ -223,29 +221,7 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier
-                .size(width = 96.dp, height = 62.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(Background)
-                .border(1.dp, Outline, RoundedCornerShape(14.dp)),
-        ) {
-            Waveform(
-                bars = remember(item.id) { waveformBars(item.id.hashCode()) },
-                color = accent,
-                modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 11.dp),
-            )
-            Box(
-                Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(5.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .padding(horizontal = 6.dp, vertical = 1.dp),
-            ) {
-                Text(item.duration, style = MaterialTheme.typography.labelSmall, color = TextPrimary)
-            }
-        }
+        TypeIconTile(item.type)
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(
@@ -255,8 +231,8 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            TypeBadge(item.type)
-            Text(item.timeAgo, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+            TypeChip(item.type)
+            Text("${item.duration}  ·  ${item.timeAgo}", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
         }
         Spacer(Modifier.width(4.dp))
         Box {
@@ -281,9 +257,6 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit) {
                 RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Outlined.OpenInNew, Purple, TextPrimary) {
                     menuExpanded = false
                     onClick()
-                }
-                RecentMenuItem(stringResource(R.string.action_share), Icons.Outlined.Share, ShareBlue, TextPrimary) {
-                    menuExpanded = false
                 }
                 HorizontalDivider(Modifier.padding(horizontal = 12.dp), color = Outline)
                 RecentMenuItem(stringResource(R.string.action_delete), Icons.Outlined.Delete, Warning, Warning) {
@@ -310,18 +283,6 @@ private fun RecentMenuItem(
     )
 }
 
-@Composable
-private fun TypeBadge(type: ProcessType) {
-    val color = if (type == ProcessType.VOCAL_REMOVAL) VocalsAmber else InstrumentalTeal
-    Box(
-        Modifier
-            .clip(RoundedCornerShape(50))
-            .border(1.dp, color.copy(alpha = 0.6f), RoundedCornerShape(50))
-            .padding(horizontal = 10.dp, vertical = 3.dp),
-    ) {
-        Text(type.label, style = MaterialTheme.typography.labelSmall, color = color)
-    }
-}
 
 @Composable
 private fun EmptyRecents(modifier: Modifier = Modifier) {

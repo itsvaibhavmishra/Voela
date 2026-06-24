@@ -6,6 +6,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.vaibhawmishra.voela.data.library.LibraryStore
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -32,15 +33,28 @@ class VocalSeparationWorker(
         val startMs = inputData.getLong(VocalSeparation.KEY_START_MS, 0)
         var endMs = inputData.getLong(VocalSeparation.KEY_END_MS, 0)
         val best = inputData.getString(VocalSeparation.KEY_ENGINE) == VocalSeparation.ENGINE_BEST
+        val title = inputData.getString(VocalSeparation.KEY_TITLE).orEmpty()
+        // Vocal splits are auto-kept in the library; "audio" splits are throwaway (separation dir).
+        val keep = inputData.getString(VocalSeparation.KEY_FEATURE) != "audio"
 
         setForeground(notifications.separatingForegroundInfo(0))
         return try {
             withContext(Dispatchers.IO) {
                 if (endMs <= startMs) endMs = AudioMetadataReader.read(applicationContext, source).durationMs
                 if (endMs <= startMs) error("Empty selection")
-                val elapsed = if (best) separateDtt(source, startMs, endMs) else separateFast(source, startMs, endMs)
+
+                val library = LibraryStore(applicationContext)
+                val libId = if (keep) library.allocateDir() else ""
+                val outDir = if (keep) library.dir(libId) else VocalSeparation.outputDir(applicationContext)
+                prepDir(outDir)
+
+                val elapsed = if (best) separateDtt(source, startMs, endMs, outDir)
+                              else separateFast(source, startMs, endMs, outDir)
+                if (keep) library.recordSplit(libId, title, endMs - startMs, elapsed)
                 report(100)
-                Result.success(workDataOf(VocalSeparation.KEY_ELAPSED_MS to elapsed))
+                Result.success(
+                    workDataOf(VocalSeparation.KEY_ELAPSED_MS to elapsed, VocalSeparation.KEY_LIBRARY_ID to libId),
+                )
             }
         } catch (t: Throwable) {
             Log.e("VocalSeparation", "separation failed", t)
@@ -50,8 +64,7 @@ class VocalSeparationWorker(
 
     // --- Best: DTTNet -------------------------------------------------------
 
-    private fun separateDtt(source: String, startMs: Long, endMs: Long): Long {
-        val outDir = freshOutDir()
+    private fun separateDtt(source: String, startMs: Long, endMs: Long, outDir: File): Long {
         val model = ensureDttModel()
 
         // Estimate window count for progress (DTTNet runs at 44.1 kHz).
@@ -134,8 +147,7 @@ class VocalSeparationWorker(
 
     // --- Fast: Spleeter -----------------------------------------------------
 
-    private fun separateFast(source: String, startMs: Long, endMs: Long): Long {
-        val outDir = freshOutDir()
+    private fun separateFast(source: String, startMs: Long, endMs: Long, outDir: File): Long {
         download(VOCALS_URL, VocalSeparation.vocalsModel(applicationContext))
         download(ACCOMP_URL, VocalSeparation.accompModel(applicationContext))
         val handle = SourceSeparator.nativeCreate(
@@ -189,9 +201,9 @@ class VocalSeparationWorker(
 
     // --- shared -------------------------------------------------------------
 
-    private fun freshOutDir(): File = VocalSeparation.outputDir(applicationContext).apply {
-        mkdirs()
-        listFiles()?.forEach { it.delete() }
+    private fun prepDir(dir: File) {
+        dir.mkdirs()
+        dir.listFiles()?.forEach { it.delete() }
     }
 
     private fun report(percent: Int) {

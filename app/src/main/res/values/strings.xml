@@ -80,6 +80,8 @@
     <string name="split_phase_separating">Separating frequencies…</string>
     <string name="split_phase_finishing">Almost done…</string>
     <string name="split_time_left">~%1$s left</string>
+    <string name="library_title">Library</string>
+    <string name="library_empty">Your extractions and splits will appear here.</string>
 
     <!-- Result screen -->
     <string name="result_title">Separation Results</string>

@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ResultViewModel(application: Application, title: String, elapsedMs: Long) : AndroidViewModel(application) {
+class ResultViewModel(application: Application, title: String, elapsedMs: Long, private val libraryId: String) : AndroidViewModel(application) {
 
     private val player = ExoPlayer.Builder(application).build()
     private val workManager = WorkManager.getInstance(application)
@@ -138,7 +138,8 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long) 
     }
 
     private fun loadStems() {
-        val dir = File(getApplication<Application>().getExternalFilesDir(null), "separation")
+        val sub = if (libraryId.isBlank()) "separation" else "library/$libraryId"
+        val dir = File(getApplication<Application>().getExternalFilesDir(null), sub)
         val stems = listOf(
             StemUi("Vocals", File(dir, "vocals.wav").absolutePath),
             StemUi("Instrumental", File(dir, "instrumental.wav").absolutePath),
@@ -176,8 +177,8 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long) 
     }
 
     companion object {
-        fun factory(title: String, elapsedMs: Long) = viewModelFactory {
-            initializer { ResultViewModel(this[APPLICATION_KEY]!!, title, elapsedMs) }
+        fun factory(title: String, elapsedMs: Long, libraryId: String = "") = viewModelFactory {
+            initializer { ResultViewModel(this[APPLICATION_KEY]!!, title, elapsedMs, libraryId) }
         }
     }
 }

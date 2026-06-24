@@ -10,8 +10,11 @@ object VocalSeparation {
     const val KEY_START_MS = "start_ms"
     const val KEY_END_MS = "end_ms"
     const val KEY_ENGINE = "engine"
+    const val KEY_TITLE = "title"
+    const val KEY_FEATURE = "feature"
     const val KEY_PROGRESS = "progress"
     const val KEY_ELAPSED_MS = "elapsed_ms"
+    const val KEY_LIBRARY_ID = "library_id"
     const val KEY_ERROR = "error"
 
     const val ENGINE_FAST = "fast" // Spleeter
