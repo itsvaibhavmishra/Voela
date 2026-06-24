@@ -7,7 +7,10 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.vaibhawmishra.voela.data.library.LibraryStore
+import com.vaibhawmishra.voela.data.settings.SettingsStore
+import com.vaibhawmishra.voela.data.settings.StemFormat
 import java.io.File
+import kotlinx.coroutines.flow.first
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.math.min
@@ -48,8 +51,15 @@ class VocalSeparationWorker(
                 val outDir = if (keep) library.dir(libId) else VocalSeparation.outputDir(applicationContext)
                 prepDir(outDir)
 
-                val elapsed = if (best) separateDtt(source, startMs, endMs, outDir)
-                              else separateFast(source, startMs, endMs, outDir)
+                // Actual end-to-end time: decode + separation + (kept-stem) encoding.
+                val started = System.currentTimeMillis()
+                if (best) separateDtt(source, startMs, endMs, outDir)
+                else separateFast(source, startMs, endMs, outDir)
+                if (keep) {
+                    val format = SettingsStore(applicationContext).vocalFormat.first()
+                    encodeStems(outDir, format)
+                }
+                val elapsed = System.currentTimeMillis() - started
                 if (keep) library.recordSplit(libId, title, endMs - startMs, elapsed)
                 report(100)
                 Result.success(
@@ -204,6 +214,23 @@ class VocalSeparationWorker(
     private fun prepDir(dir: File) {
         dir.mkdirs()
         dir.listFiles()?.forEach { it.delete() }
+    }
+
+    // Stems are written as WAV (uncompressed ~10 MB/min/stem). Re-encode kept ones to the
+    // user's chosen format to control library size vs quality. WAV keeps them as-is.
+    private suspend fun encodeStems(dir: File, format: StemFormat) {
+        if (format.extension == "wav") return
+        for (name in listOf("vocals", "instrumental")) {
+            val wav = File(dir, "$name.wav")
+            if (!wav.exists()) continue
+            val out = File(dir, "$name.${format.extension}")
+            val ok = when (format.extension) {
+                "m4a" -> AudioTranscoder.toAac(applicationContext, wav, out)
+                "mp3" -> Mp3Encoder.encode(wav, out, format.bitrate)
+                else -> false
+            }
+            if (ok && out.length() > 0) wav.delete() else out.delete()
+        }
     }
 
     private fun report(percent: Int) {

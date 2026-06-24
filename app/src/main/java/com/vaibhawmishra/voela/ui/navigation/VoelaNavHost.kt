@@ -13,6 +13,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.vaibhawmishra.voela.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -28,6 +30,9 @@ import com.vaibhawmishra.voela.ui.library.LibraryScreen
 import com.vaibhawmishra.voela.ui.library.LibraryViewModel
 import com.vaibhawmishra.voela.ui.result.ResultScreen
 import com.vaibhawmishra.voela.ui.result.ResultViewModel
+import com.vaibhawmishra.voela.ui.settings.SettingFormatScreen
+import com.vaibhawmishra.voela.ui.settings.SettingsScreen
+import com.vaibhawmishra.voela.ui.settings.SettingsViewModel
 import com.vaibhawmishra.voela.ui.split.SplitScreen
 import com.vaibhawmishra.voela.ui.split.SplitViewModel
 import com.vaibhawmishra.voela.ui.trim.TrimAudioScreen
@@ -40,6 +45,8 @@ private object Routes {
     const val HOME = "home"
     const val YOUTUBE = "youtube?lib={lib}"
     const val LIBRARY = "library"
+    const val SETTINGS = "settings"
+    const val SETTINGS_VOCAL_FORMAT = "settings/vocal_format"
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
@@ -86,8 +93,29 @@ fun VoelaNavHost() {
                 onChooseFile = { picker.launch("audio/*") },
                 onYouTubeUrl = { navController.navigate(Routes.youtube()) },
                 onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
+                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                 onRecentClick = { openLibraryItem(navController, it) },
                 onRecentDelete = { homeViewModel.delete(it.id) },
+            )
+        }
+        composable(Routes.SETTINGS) {
+            val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            SettingsScreen(
+                uiState = state,
+                onBack = navController::popBackStack,
+                onOpenVocalFormat = { navController.navigate(Routes.SETTINGS_VOCAL_FORMAT) },
+            )
+        }
+        composable(Routes.SETTINGS_VOCAL_FORMAT) {
+            val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            SettingFormatScreen(
+                title = stringResource(R.string.settings_vocal_format_title),
+                description = stringResource(R.string.settings_vocal_format_desc),
+                selected = state.vocalFormat,
+                onBack = navController::popBackStack,
+                onSelect = viewModel::setVocalFormat,
             )
         }
         composable(

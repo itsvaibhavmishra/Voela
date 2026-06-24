@@ -143,9 +143,13 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long, 
     private fun loadStems() {
         val sub = if (libraryId.isBlank()) "separation" else "library/$libraryId"
         val dir = File(getApplication<Application>().getExternalFilesDir(null), sub)
+        // Kept stems are stored in the user's chosen format; find whichever exists.
+        fun stemFile(name: String): File =
+            listOf("m4a", "mp3", "wav").map { File(dir, "$name.$it") }.firstOrNull { it.exists() }
+                ?: File(dir, "$name.wav")
         val stems = listOf(
-            StemUi("Vocals", File(dir, "vocals.wav").absolutePath),
-            StemUi("Instrumental", File(dir, "instrumental.wav").absolutePath),
+            StemUi("Vocals", stemFile("vocals").absolutePath),
+            StemUi("Instrumental", stemFile("instrumental").absolutePath),
         ).filter { File(it.path).exists() }
         _uiState.update { it.copy(stems = stems) }
         stems.forEachIndexed { i, stem ->

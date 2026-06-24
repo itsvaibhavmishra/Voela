@@ -30,6 +30,7 @@ import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.SmartDisplay
@@ -83,6 +84,7 @@ fun HomeScreen(
     onChooseFile: () -> Unit = {},
     onYouTubeUrl: () -> Unit = {},
     onOpenLibrary: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     onRecentClick: (RecentAudio) -> Unit = {},
     onRecentDelete: (RecentAudio) -> Unit = {},
 ) {
@@ -93,7 +95,7 @@ fun HomeScreen(
             .windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 20.dp),
     ) {
-        TopBar(onOpenLibrary)
+        TopBar(onOpenSettings, onOpenLibrary)
         Spacer(Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
@@ -127,7 +129,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun TopBar(onOpenLibrary: () -> Unit) {
+private fun TopBar(onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -138,6 +140,9 @@ private fun TopBar(onOpenLibrary: () -> Unit) {
             modifier = Modifier.height(30.dp),
         )
         Spacer(Modifier.weight(1f))
+        IconButton(onClick = onOpenSettings) {
+            Icon(Icons.Outlined.Settings, stringResource(R.string.cd_settings), tint = TextSecondary)
+        }
         IconButton(onClick = onOpenLibrary) {
             Icon(Icons.Outlined.FolderOpen, stringResource(R.string.cd_library), tint = TextSecondary)
         }
