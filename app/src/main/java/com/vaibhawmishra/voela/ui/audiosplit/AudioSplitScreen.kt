@@ -33,8 +33,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
+import com.vaibhawmishra.voela.ui.components.DownloadOptionsSheet
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.components.Waveform
 import com.vaibhawmishra.voela.ui.formatClock
@@ -75,10 +79,11 @@ fun AudioSplitScreen(
     onStepDown: () -> Unit,
     onPlayPause: () -> Unit,
     onPlayClip: (Int) -> Unit,
-    onSplit: () -> Unit,
+    onSplit: (extension: String, bitrate: String?, mime: String) -> Unit,
     onConsumeResult: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var showFormatSheet by remember { mutableStateOf(false) }
     val snackbar = remember { SnackbarHostState() }
     val context = LocalContext.current
     LaunchedEffect(uiState.savedCount, uiState.error) {
@@ -148,12 +153,23 @@ fun AudioSplitScreen(
         PrimaryButton(
             text = if (uiState.splitting) stringResource(R.string.audiosplit_splitting, uiState.splitProgress)
                    else stringResource(R.string.audiosplit_action),
-            onClick = onSplit,
+            onClick = { showFormatSheet = true },
             enabled = uiState.clips.isNotEmpty() && !uiState.splitting,
         )
         Spacer(Modifier.height(8.dp))
     }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.systemBars).padding(16.dp))
+    }
+
+    if (showFormatSheet) {
+        DownloadOptionsSheet(
+            onDismiss = { showFormatSheet = false },
+            onSelect = { option ->
+                showFormatSheet = false
+                onSplit(option.extension, option.bitrate, option.mimeType)
+            },
+            title = stringResource(R.string.audiosplit_save_as),
+        )
     }
 }
 

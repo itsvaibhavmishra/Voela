@@ -41,6 +41,7 @@ class VocalSeparationWorker(
         val keep = inputData.getString(VocalSeparation.KEY_FEATURE) != "audio"
 
         setForeground(notifications.separatingForegroundInfo(0))
+        var allocatedDir: File? = null
         return try {
             withContext(Dispatchers.IO) {
                 if (endMs <= startMs) endMs = AudioMetadataReader.read(applicationContext, source).durationMs
@@ -49,6 +50,7 @@ class VocalSeparationWorker(
                 val library = LibraryStore(applicationContext)
                 val libId = if (keep) library.allocateDir() else ""
                 val outDir = if (keep) library.dir(libId) else VocalSeparation.outputDir(applicationContext)
+                if (keep) allocatedDir = outDir
                 prepDir(outDir)
 
                 // Actual end-to-end time: decode + separation + (kept-stem) encoding.
@@ -68,6 +70,7 @@ class VocalSeparationWorker(
             }
         } catch (t: Throwable) {
             Log.e("VocalSeparation", "separation failed", t)
+            allocatedDir?.deleteRecursively() // don't leave an empty kept-split folder behind
             Result.failure(workDataOf(VocalSeparation.KEY_ERROR to (t.message ?: "Separation failed")))
         }
     }
@@ -136,22 +139,22 @@ class VocalSeparationWorker(
         return System.currentTimeMillis() - t0
     }
 
-    // Make sure the DTTNet ONNX is on disk. Bundled in assets for now; falls back to a
-    // remote download once the model is hosted (then the asset can be dropped to slim the APK).
+    // Copy the bundled DTTNet ONNX out of assets to a stable path (once). The model
+    // ships inside the APK, so there's no network fallback.
     private fun ensureDttModel(): File {
         val model = VocalSeparation.dttModel(applicationContext)
         if (model.exists() && model.length() > 0) return model
         model.parentFile?.mkdirs()
         val tmp = File(model.parentFile, "${model.name}.part")
-        val fromAsset = try {
+        try {
             applicationContext.assets.open(DTT_ASSET).use { input ->
                 tmp.outputStream().use { input.copyTo(it, 256 * 1024) }
             }
-            tmp.renameTo(model)
-        } catch (_: Throwable) {
-            tmp.delete(); false
+            if (!tmp.renameTo(model)) error("Could not unpack model")
+        } catch (t: Throwable) {
+            tmp.delete()
+            throw t
         }
-        if (!fromAsset) download(DTT_MODEL_URL, model)
         return model
     }
 
@@ -264,7 +267,5 @@ class VocalSeparationWorker(
         private const val VOCALS_URL = "$BASE/vocals.fp16.onnx"
         private const val ACCOMP_URL = "$BASE/accompaniment.fp16.onnx"
         private const val DTT_ASSET = "dttnet_vocals.onnx" // bundled in app/src/main/assets
-        // TODO: once the 23.5 MB ONNX is hosted, point this at it and drop the bundled asset.
-        private const val DTT_MODEL_URL = "https://example.com/dttnet_vocals.onnx"
     }
 }

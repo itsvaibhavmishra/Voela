@@ -1,22 +1,16 @@
 package com.vaibhawmishra.voela.ui.trim
 
 import android.app.Application
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import com.vaibhawmishra.voela.data.audio.AudioMetadataReader
 import com.vaibhawmishra.voela.data.audio.EngineStats
+import com.vaibhawmishra.voela.data.audio.RangePlayer
 import com.vaibhawmishra.voela.data.audio.VocalSeparation
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
-import java.io.File
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,39 +28,25 @@ class TrimAudioViewModel(
     private val source: String,
 ) : AndroidViewModel(application) {
 
-    private val player = ExoPlayer.Builder(application).build()
-
     private val _uiState = MutableStateFlow(TrimAudioUiState(feature = feature, title = title))
     val uiState: StateFlow<TrimAudioUiState> = _uiState.asStateFlow()
 
-    private var positionJob: Job? = null
+    private val rangePlayer = RangePlayer(
+        application,
+        viewModelScope,
+        onUpdate = { playing, pos -> _uiState.update { it.copy(isPlaying = playing, positionMs = pos) } },
+        onReady = { dur -> setDuration(dur) },
+    )
 
     init {
-        player.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                _uiState.update { it.copy(isPlaying = isPlaying) }
-                if (isPlaying) startPositionUpdates() else positionJob?.cancel()
-            }
-
-            override fun onPlaybackStateChanged(state: Int) {
-                if (state == Player.STATE_READY) setDuration(player.duration.coerceAtLeast(0))
-            }
-        })
-        val uri = if (source.startsWith("content://")) Uri.parse(source) else Uri.fromFile(File(source))
-        player.setMediaItem(MediaItem.fromUri(uri))
-        player.prepare()
+        rangePlayer.setSource(source)
         loadMetadata()
         loadWaveform()
     }
 
     fun onPlayPause() {
-        if (player.isPlaying) {
-            player.pause()
-            return
-        }
         val state = _uiState.value
-        if (player.currentPosition < state.startMs || player.currentPosition >= state.endMs) player.seekTo(state.startMs)
-        player.play()
+        rangePlayer.toggle(state.startMs, state.endMs)
     }
 
     // From the waveform handles or the range slider — fractions of the total duration
@@ -101,8 +81,7 @@ class TrimAudioViewModel(
 
     // Moving the start always repositions playback to it, so playback runs from the new start
     private fun seekToStart(startMs: Long) {
-        player.seekTo(startMs)
-        _uiState.update { it.copy(positionMs = startMs) }
+        rangePlayer.seekTo(startMs)
     }
 
     private fun setDuration(durationMs: Long) {
@@ -110,25 +89,6 @@ class TrimAudioViewModel(
         _uiState.update {
             if (it.durationMs > 0) it
             else it.copy(durationMs = durationMs, endMs = if (it.endMs == 0L) durationMs else it.endMs).withEstimate()
-        }
-    }
-
-    private fun startPositionUpdates() {
-        positionJob?.cancel()
-        positionJob = viewModelScope.launch {
-            while (true) {
-                val pos = player.currentPosition.coerceAtLeast(0)
-                val state = _uiState.value
-                // Stop at the end of the selected range and rewind to its start
-                if (state.endMs > 0 && pos >= state.endMs) {
-                    player.pause()
-                    player.seekTo(state.startMs)
-                    _uiState.update { it.copy(positionMs = state.startMs) }
-                    break
-                }
-                _uiState.update { it.copy(positionMs = pos) }
-                delay(40)
-            }
         }
     }
 
@@ -155,8 +115,7 @@ class TrimAudioViewModel(
     }
 
     override fun onCleared() {
-        positionJob?.cancel()
-        player.release()
+        rangePlayer.release()
     }
 
     companion object {

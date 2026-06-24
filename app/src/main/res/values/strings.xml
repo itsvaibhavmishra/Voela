@@ -13,7 +13,6 @@
 
     <!-- Recents menu -->
     <string name="action_open">Open</string>
-    <string name="action_share">Share</string>
     <string name="action_delete">Delete</string>
 
     <!-- YouTube URL screen -->
@@ -43,7 +42,6 @@
     <string name="clear_all">Clear All</string>
     <string name="recent_links_empty">Links you extract will appear here</string>
     <string name="tos_title">We respect YouTube\'s Terms of Service.</string>
-    <string name="tos_desc">Only download content you have the right to use.</string>
 
     <!-- Select Feature screen -->
     <string name="feature_title">Select a feature</string>
@@ -53,7 +51,6 @@
     <string name="split_audio">Split Audio</string>
     <string name="split_audio_desc">Cut your audio into multiple segments</string>
     <string name="on_device_title">All processing is done on-device.</string>
-    <string name="on_device_desc">Your audio never leaves your phone.</string>
 
     <!-- Trim Audio screen -->
     <string name="trim_title">Trim Audio</string>
@@ -107,9 +104,10 @@
     <string name="audiosplit_whole">Whole audio</string>
     <string name="audiosplit_clip_n">Clip %1$d</string>
     <string name="audiosplit_save_note">Clips save to your library (Music/Voela/Audio Splits).</string>
-    <string name="audiosplit_action">Split Audio</string>
-    <string name="audiosplit_splitting">Splitting… %1$d%%</string>
+    <string name="audiosplit_action">Save splits</string>
+    <string name="audiosplit_splitting">Saving… %1$d%%</string>
     <string name="audiosplit_saved">Saved %1$d clips to Audio Splits</string>
+    <string name="audiosplit_save_as">Save clips as…</string>
     <string name="settings_title">Settings</string>
     <string name="settings_group_splitting">Splitting</string>
     <string name="settings_vocal_title">Split Vocals</string>
@@ -127,7 +125,6 @@
     <string name="result_subtitle">Your audio has been split into vocals and instrumental.</string>
     <string name="result_completed_in">Completed in %1$s</string>
     <string name="result_library_title">Saved stems appear in your library</string>
-    <string name="result_library_desc">Use the download icon to keep a stem.</string>
     <string name="saved_to_vocal_splits">Saved to Vocal Splits</string>
 
     <!-- Notifications -->

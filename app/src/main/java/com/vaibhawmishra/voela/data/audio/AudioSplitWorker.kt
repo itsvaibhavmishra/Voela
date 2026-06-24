@@ -30,6 +30,9 @@ class AudioSplitWorker(
         var endMs = inputData.getLong(AudioSplit.KEY_END_MS, 0)
         val segmentMs = inputData.getLong(AudioSplit.KEY_SEGMENT_MS, 0)
         val title = inputData.getString(AudioSplit.KEY_TITLE).orEmpty().ifBlank { "Audio" }
+        val ext = inputData.getString(AudioSplit.KEY_EXTENSION) ?: "m4a"
+        val bitrate = inputData.getString(AudioSplit.KEY_BITRATE)
+        val mime = inputData.getString(AudioSplit.KEY_MIME) ?: "audio/mp4"
 
         setForeground(notifications.savingForegroundInfo(0))
         return try {
@@ -47,13 +50,23 @@ class AudioSplitWorker(
                 }
 
                 clips.forEachIndexed { i, clip ->
-                    val temp = File(tmpDir, "clip_${i + 1}.m4a")
-                    val ok = AudioCutter.cut(applicationContext, source, startMs + clip.startMs, startMs + clip.endMs, temp)
-                    if (!ok || !temp.exists()) error("Could not cut clip ${i + 1}")
-                    if (!MediaStoreSaver.save(applicationContext, temp, "Clip ${i + 1}.m4a", "audio/mp4", subPath)) {
+                    // Cut the range losslessly to m4a, then convert to the chosen format if needed.
+                    val cut = File(tmpDir, "cut_${i + 1}.m4a")
+                    if (!AudioCutter.cut(applicationContext, source, startMs + clip.startMs, startMs + clip.endMs, cut) || !cut.exists()) {
+                        error("Could not cut clip ${i + 1}")
+                    }
+                    val displayName = "Clip ${i + 1}.$ext"
+                    val toSave = when (ext) {
+                        "m4a" -> cut
+                        "mp3" -> File(tmpDir, displayName).also { if (!Mp3Encoder.encode(cut, it, bitrate)) error("Encode failed (clip ${i + 1})") }
+                        "wav" -> File(tmpDir, displayName).also { if (!AudioTranscoder.toWav(cut, it)) error("Encode failed (clip ${i + 1})") }
+                        else -> cut
+                    }
+                    if (!MediaStoreSaver.save(applicationContext, toSave, displayName, mime, subPath)) {
                         error("Could not save clip ${i + 1}")
                     }
-                    temp.delete()
+                    cut.delete()
+                    if (toSave != cut) toSave.delete()
                     report(((i + 1) * 100 / clips.size).coerceIn(1, 100))
                 }
                 notifications.showSaved(applicationContext.getString(com.vaibhawmishra.voela.R.string.audiosplit_saved, clips.size))

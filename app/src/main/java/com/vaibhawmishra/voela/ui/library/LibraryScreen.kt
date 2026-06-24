@@ -112,10 +112,10 @@ fun LibraryScreen(
                     HeaderAction(stringResource(R.string.action_clear_all), Warning) { confirm = Confirm.ClearAll }
                 }
             }
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(16.dp))
             AutoClearControl(uiState.expiryDays, onSetExpiry)
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
         if (uiState.entries.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -177,22 +177,31 @@ private fun expiryLabel(days: Int): String = when (days) {
 @Composable
 private fun AutoClearControl(days: Int, onSet: (Int) -> Unit) {
     var open by remember { mutableStateOf(false) }
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Outlined.AutoDelete, null, tint = TextSecondary, modifier = Modifier.size(15.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(stringResource(R.string.library_autoclear), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-        Spacer(Modifier.width(8.dp))
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Surface)
+            .border(1.dp, Outline, RoundedCornerShape(14.dp))
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Outlined.AutoDelete, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(12.dp))
+        Text(stringResource(R.string.library_autoclear), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
+        Spacer(Modifier.weight(1f))
         Box {
             Row(
                 Modifier
                     .clip(RoundedCornerShape(50))
                     .background(SurfaceElevated)
                     .clickable { open = true }
-                    .padding(start = 12.dp, end = 6.dp, top = 4.dp, bottom = 4.dp),
+                    .padding(start = 14.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(expiryLabel(days), style = MaterialTheme.typography.labelLarge, color = TextPrimary)
-                Icon(Icons.Outlined.ArrowDropDown, null, tint = TextSecondary, modifier = Modifier.size(18.dp))
+                Text(expiryLabel(days), style = MaterialTheme.typography.labelLarge, color = Purple)
+                Spacer(Modifier.width(2.dp))
+                Icon(Icons.Outlined.ArrowDropDown, null, tint = Purple, modifier = Modifier.size(18.dp))
             }
             DropdownMenu(
                 expanded = open,

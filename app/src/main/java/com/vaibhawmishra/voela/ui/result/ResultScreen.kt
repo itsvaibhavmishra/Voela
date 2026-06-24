@@ -267,25 +267,12 @@ private fun TimeRuler(durationMs: Long) {
 @Composable
 private fun LibraryNote() {
     Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Surface)
-            .border(1.dp, Outline, RoundedCornerShape(16.dp))
-            .padding(14.dp),
+        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(DownloadGreen.copy(alpha = 0.14f)),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(Icons.Outlined.CheckCircle, null, tint = DownloadGreen, modifier = Modifier.size(18.dp))
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.result_library_title), style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
-            Spacer(Modifier.height(2.dp))
-            Text(stringResource(R.string.result_library_desc), style = MaterialTheme.typography.bodySmall, color = TextSecondary)
-        }
+        Icon(Icons.Outlined.CheckCircle, null, tint = TextSecondary, modifier = Modifier.size(13.dp))
+        Spacer(Modifier.width(6.dp))
+        Text(stringResource(R.string.result_library_title), style = MaterialTheme.typography.labelMedium, color = TextSecondary)
     }
 }

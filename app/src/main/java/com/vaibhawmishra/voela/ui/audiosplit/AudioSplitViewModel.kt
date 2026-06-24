@@ -1,15 +1,11 @@
 package com.vaibhawmishra.voela.ui.audiosplit
 
 import android.app.Application
-import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -19,8 +15,8 @@ import com.vaibhawmishra.voela.data.audio.AudioSplit
 import com.vaibhawmishra.voela.data.audio.AudioSplitPlan
 import com.vaibhawmishra.voela.data.audio.AudioSplitWorker
 import com.vaibhawmishra.voela.data.audio.ClipRange
+import com.vaibhawmishra.voela.data.audio.RangePlayer
 import com.vaibhawmishra.voela.data.audio.WaveformGenerator
-import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,30 +53,23 @@ class AudioSplitViewModel(
     private val endMs: Long,
 ) : AndroidViewModel(application) {
 
-    private val player = ExoPlayer.Builder(application).build()
     private val workManager = WorkManager.getInstance(application)
     private val splitSource = source
-    private var positionJob: Job? = null
+    private val total = (endMs - startMs).coerceAtLeast(0)
     private var recomputeJob: Job? = null
-    private var rangeStart = startMs
-    private var rangeEnd = endMs
     @Volatile private var splitInitiated = false
 
+    private val rangePlayer = RangePlayer(application, viewModelScope, onUpdate = { playing, pos ->
+        _uiState.update { it.copy(isPlaying = playing, positionMs = (pos - startMs).coerceIn(0, total)) }
+    })
+
     private val _uiState = MutableStateFlow(
-        AudioSplitUiState(title = title, totalMs = (endMs - startMs).coerceAtLeast(0)).recompute(),
+        AudioSplitUiState(title = title, totalMs = total).recompute(),
     )
     val uiState: StateFlow<AudioSplitUiState> = _uiState.asStateFlow()
 
     init {
-        player.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                _uiState.update { it.copy(isPlaying = isPlaying) }
-                if (isPlaying) startPositionUpdates() else positionJob?.cancel()
-            }
-        })
-        val uri = if (source.startsWith("content://")) Uri.parse(source) else Uri.fromFile(File(source))
-        player.setMediaItem(MediaItem.fromUri(uri))
-        player.prepare()
+        rangePlayer.setSource(source)
         viewModelScope.launch {
             val bars = WaveformGenerator.generate(getApplication(), source)
             _uiState.update { it.copy(waveform = bars) }
@@ -90,9 +79,9 @@ class AudioSplitViewModel(
         }
     }
 
-    fun onSplit() {
+    fun onSplit(extension: String, bitrate: String?, mime: String) {
         if (_uiState.value.splitting) return
-        player.pause()
+        rangePlayer.pause()
         splitInitiated = true
         _uiState.update { it.copy(splitting = true, splitProgress = 0, savedCount = 0, error = null) }
         val data = workDataOf(
@@ -101,6 +90,9 @@ class AudioSplitViewModel(
             AudioSplit.KEY_END_MS to endMs,
             AudioSplit.KEY_SEGMENT_MS to _uiState.value.segmentMs,
             AudioSplit.KEY_TITLE to _uiState.value.title,
+            AudioSplit.KEY_EXTENSION to extension,
+            AudioSplit.KEY_BITRATE to bitrate,
+            AudioSplit.KEY_MIME to mime,
         )
         workManager.enqueueUniqueWork(
             AudioSplit.WORK_NAME,
@@ -130,23 +122,17 @@ class AudioSplitViewModel(
 
     // Big button: pause anything playing, otherwise play the whole selection.
     fun onPlayPause() {
-        if (player.isPlaying) { player.pause(); return }
-        playRange(startMs, endMs, clipIndex = -1)
+        if (rangePlayer.isPlaying) { rangePlayer.pause(); return }
+        _uiState.update { it.copy(playingClip = -1) }
+        rangePlayer.play(startMs, endMs)
     }
 
     // Tap a clip: pause it if it's the one playing, otherwise preview just that clip.
     fun onPlayClip(index: Int) {
         val clip = _uiState.value.clips.getOrNull(index) ?: return
-        if (player.isPlaying && _uiState.value.playingClip == index) { player.pause(); return }
-        playRange(startMs + clip.startMs, startMs + clip.endMs, index)
-    }
-
-    private fun playRange(from: Long, to: Long, clipIndex: Int) {
-        rangeStart = from
-        rangeEnd = to
-        _uiState.update { it.copy(playingClip = clipIndex) }
-        player.seekTo(from)
-        player.play()
+        if (rangePlayer.isPlaying && _uiState.value.playingClip == index) { rangePlayer.pause(); return }
+        _uiState.update { it.copy(playingClip = index) }
+        rangePlayer.play(startMs + clip.startMs, startMs + clip.endMs)
     }
 
     fun onUnitChange(unit: SplitUnit) {
@@ -183,36 +169,17 @@ class AudioSplitViewModel(
     // Clip boundaries are about to change — stop any clip preview so the index stays valid.
     private fun stopForRetarget() {
         if (_uiState.value.playingClip != -1) {
-            player.pause()
+            rangePlayer.pause()
             _uiState.update { it.copy(playingClip = -1, positionMs = 0) }
         }
     }
-
-    private fun startPositionUpdates() {
-        positionJob?.cancel()
-        positionJob = viewModelScope.launch {
-            while (true) {
-                val pos = player.currentPosition.coerceAtLeast(0)
-                if (rangeEnd > 0 && pos >= rangeEnd) {
-                    player.pause()
-                    player.seekTo(rangeStart)
-                    _uiState.update { it.copy(positionMs = (rangeStart - startMs).coerceIn(0, totalMs())) }
-                    break
-                }
-                _uiState.update { it.copy(positionMs = (pos - startMs).coerceIn(0, totalMs())) }
-                delay(40)
-            }
-        }
-    }
-
-    private fun totalMs() = (endMs - startMs).coerceAtLeast(0)
 
     private fun AudioSplitUiState.recompute(): AudioSplitUiState =
         copy(clips = AudioSplitPlan.parts(totalMs, segmentMs))
 
     override fun onCleared() {
-        positionJob?.cancel()
-        player.release()
+        recomputeJob?.cancel()
+        rangePlayer.release()
     }
 
     companion object {

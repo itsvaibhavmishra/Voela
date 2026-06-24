@@ -41,16 +41,21 @@ import com.vaibhawmishra.voela.ui.theme.TextSecondary
 // Reusable bottom sheet that lets the user pick a download format/quality
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DownloadOptionsSheet(onDismiss: () -> Unit, onSelect: (DownloadOption) -> Unit) {
+fun DownloadOptionsSheet(
+    onDismiss: () -> Unit,
+    onSelect: (DownloadOption) -> Unit,
+    title: String = stringResource(R.string.download_title),
+    subtitle: String = stringResource(R.string.download_subtitle),
+) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(),
         containerColor = Surface,
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
-            Text(stringResource(R.string.download_title), style = MaterialTheme.typography.titleLarge, color = TextPrimary)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = TextPrimary)
             Spacer(Modifier.height(4.dp))
-            Text(stringResource(R.string.download_subtitle), style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
             Spacer(Modifier.height(18.dp))
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 downloadOptions.forEach { DownloadOptionRow(it) { onSelect(it) } }
