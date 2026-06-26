@@ -1,68 +1,71 @@
-name: Release
+name: Build & Release
 
-# Cuts a GitHub Release when a new version lands on main.
-# The version is read from /version.properties (the single source of truth) — bump
-# VERSION_NAME/VERSION_CODE there and merge to main to publish. A release is only
-# created when the tag v<VERSION_NAME> does not already exist, so ordinary merges
-# that don't change the version won't produce duplicate releases. Can also be run
-# manually from the Actions tab.
+# Builds the release APK on every push to main and staging.
+#  - staging: a sandbox that exercises the full build + publish path and updates a
+#    rolling "staging" pre-release, so any failure surfaces here BEFORE main.
+#  - main: publishes a real GitHub Release tagged v<VERSION_NAME> (from version.properties),
+#    but only when that tag doesn't already exist — so ordinary merges that don't bump
+#    the version won't create duplicate releases.
+# Version is the single source of truth in /version.properties.
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  build-release:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Read version
-        id: ver
+      - name: Resolve version & channel
+        id: cfg
         run: |
-          VERSION_NAME=$(grep '^VERSION_NAME=' version.properties | cut -d= -f2 | tr -d '[:space:]')
-          echo "name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
-          echo "tag=v$VERSION_NAME" >> "$GITHUB_OUTPUT"
-
-      - name: Check whether this version is already released
-        id: tag
-        run: |
-          if git ls-remote --tags origin "refs/tags/${{ steps.ver.outputs.tag }}" | grep -q .; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::Tag ${{ steps.ver.outputs.tag }} already exists — skipping release. Bump version.properties to cut a new one."
+          VN=$(grep '^VERSION_NAME=' version.properties | cut -d= -f2 | tr -d '[:space:]')
+          echo "name=$VN" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "title=Voela $VN" >> "$GITHUB_OUTPUT"
+            if git ls-remote --tags origin "refs/tags/v$VN" | grep -q .; then
+              echo "skip=true" >> "$GITHUB_OUTPUT"
+              echo "::notice::v$VN already released — bump version.properties to cut a new one."
+            else
+              echo "skip=false" >> "$GITHUB_OUTPUT"
+            fi
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "title=Voela $VN (staging sandbox)" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up JDK 17
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.cfg.outputs.skip == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
       - name: Set up Android SDK
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.cfg.outputs.skip == 'false'
         uses: android-actions/setup-android@v3
 
       - name: Install SDK packages (platform 36, build-tools, NDK)
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.cfg.outputs.skip == 'false'
         run: |
           yes | sdkmanager --licenses >/dev/null || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;28.2.13676358"
 
-      - name: Decode release keystore (if configured)
-        if: steps.tag.outputs.exists == 'false' && env.KEYSTORE_BASE64 != ''
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      - name: Decode release keystore (only if secret configured)
+        if: steps.cfg.outputs.skip == 'false' && env.KEYSTORE_BASE64 != ''
         run: echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
 
       - name: Build release APK
-        if: steps.tag.outputs.exists == 'false'
+        if: steps.cfg.outputs.skip == 'false'
         env:
           KEYSTORE_FILE: ${{ secrets.KEYSTORE_BASE64 != '' && format('{0}/release.jks', runner.temp) || '' }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -71,16 +74,26 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk "Voela-${{ steps.cfg.outputs.name }}.apk"
 
-      - name: Name the APK
-        if: steps.tag.outputs.exists == 'false'
-        run: cp app/build/outputs/apk/release/app-release.apk "Voela-${{ steps.ver.outputs.name }}.apk"
-
-      - name: Publish GitHub Release
-        if: steps.tag.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
+      - name: Upload APK artifact
+        if: steps.cfg.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
         with:
-          tag_name: ${{ steps.ver.outputs.tag }}
-          name: Voela ${{ steps.ver.outputs.name }}
-          generate_release_notes: true
-          files: Voela-${{ steps.ver.outputs.name }}.apk
+          name: Voela-${{ steps.cfg.outputs.name }}-${{ github.ref_name }}
+          path: Voela-${{ steps.cfg.outputs.name }}.apk
+
+      - name: Publish staging sandbox pre-release
+        if: steps.cfg.outputs.skip == 'false' && github.ref_name == 'staging'
+        run: |
+          gh release delete staging --yes --cleanup-tag 2>/dev/null || true
+          gh release create staging "Voela-${{ steps.cfg.outputs.name }}.apk" \
+            --prerelease --target "${{ github.sha }}" \
+            --title "${{ steps.cfg.outputs.title }}" \
+            --notes "Sandbox build from staging — verifies the release pipeline. Not a stable release."
+
+      - name: Publish release
+        if: steps.cfg.outputs.skip == 'false' && github.ref_name == 'main'
+        run: |
+          gh release create "v${{ steps.cfg.outputs.name }}" "Voela-${{ steps.cfg.outputs.name }}.apk" \
+            --title "${{ steps.cfg.outputs.title }}" --generate-notes

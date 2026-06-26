@@ -12,8 +12,9 @@ val versionProps = Properties().apply {
 val keystoreProps = Properties().apply {
     rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
-// Release keystore comes from CI env (secrets) or a local keystore.properties; null means none.
-val releaseStorePath: String? = System.getenv("KEYSTORE_FILE") ?: keystoreProps.getProperty("storeFile")
+// Release keystore comes from CI env (secrets) or a local keystore.properties; null/blank means none.
+val releaseStorePath: String? = (System.getenv("KEYSTORE_FILE") ?: keystoreProps.getProperty("storeFile"))
+    ?.takeIf { it.isNotBlank() }
 
 android {
     namespace = "com.vaibhawmishra.voela"
