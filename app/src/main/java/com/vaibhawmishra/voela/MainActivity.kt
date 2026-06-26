@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.vaibhawmishra.voela.data.audio.WorkingCache
 import com.vaibhawmishra.voela.data.settings.SettingsStore
+import com.vaibhawmishra.voela.data.update.AppUpdate
 import com.vaibhawmishra.voela.ui.navigation.VoelaNavHost
 import com.vaibhawmishra.voela.ui.theme.VoelaTheme
 import com.vaibhawmishra.voela.ui.theme.accentFor
@@ -23,7 +24,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Drop any leftover transcode temp from a killed save
-        Thread { WorkingCache.sweep(applicationContext) }.start()
+        Thread {
+            WorkingCache.sweep(applicationContext)
+            AppUpdate.cleanup(applicationContext) // remove any leftover update APK from a finished install
+        }.start()
         // Dark-only app — keep light icons over transparent bars
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),

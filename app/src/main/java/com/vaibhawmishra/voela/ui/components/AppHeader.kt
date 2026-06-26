@@ -31,7 +31,7 @@ fun AppHeader(onBack: () -> Unit, modifier: Modifier = Modifier, home: Boolean =
         Image(
             painter = painterResource(R.drawable.logo_voela),
             contentDescription = stringResource(R.string.cd_logo),
-            modifier = Modifier.height(30.dp),
+            modifier = Modifier.height(42.dp),
         )
         Spacer(Modifier.weight(1f))
         IconButton(onClick = onBack) {
