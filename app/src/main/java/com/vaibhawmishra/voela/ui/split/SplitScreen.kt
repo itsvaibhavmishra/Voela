@@ -111,10 +111,12 @@ fun SplitScreen(
             Text("$animatedPercent%", style = MaterialTheme.typography.headlineSmall, color = LocalAccent.current.base)
             Spacer(Modifier.height(14.dp))
             SmoothProgressBar(uiState.progress / 100f, Modifier.fillMaxWidth())
-            if (!uiState.isComplete && uiState.etaSeconds > 0) {
+            if (!uiState.isComplete) {
                 Spacer(Modifier.height(10.dp))
                 Text(
-                    stringResource(R.string.split_time_left, formatDurationSeconds(uiState.etaSeconds)),
+                    if (uiState.etaSeconds > 0)
+                        stringResource(R.string.split_time_left, formatDurationSeconds(uiState.etaSeconds))
+                    else stringResource(R.string.split_almost_done),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
                 )

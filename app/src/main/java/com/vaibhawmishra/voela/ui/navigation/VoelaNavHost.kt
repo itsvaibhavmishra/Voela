@@ -307,6 +307,7 @@ fun VoelaNavHost() {
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             LaunchedEffect(state.isComplete) {
                 if (state.isComplete) {
+                    kotlinx.coroutines.delay(550) // let the bar settle on 100% before we leave
                     navController.navigate(Routes.result(feature.key, name, state.elapsedMs, state.libraryId)) {
                         popUpTo(Routes.PROCESS) { inclusive = true }
                     }
