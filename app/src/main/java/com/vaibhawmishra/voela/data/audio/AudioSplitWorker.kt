@@ -69,7 +69,10 @@ class AudioSplitWorker(
                     if (toSave != cut) toSave.delete()
                     report(((i + 1) * 100 / clips.size).coerceIn(1, 100))
                 }
-                notifications.showSaved(applicationContext.getString(com.vaibhawmishra.voela.R.string.audiosplit_saved, clips.size))
+                notifications.showSaved(
+                    applicationContext.getString(com.vaibhawmishra.voela.R.string.audiosplit_clips, clips.size),
+                    applicationContext.getString(com.vaibhawmishra.voela.R.string.saved_to_audio_splits),
+                )
                 Result.success(workDataOf(AudioSplit.KEY_COUNT to clips.size))
             }
         } catch (t: Throwable) {

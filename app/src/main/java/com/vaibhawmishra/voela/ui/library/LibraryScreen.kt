@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.library
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -55,7 +56,6 @@ import com.vaibhawmishra.voela.ui.components.TypeChip
 import com.vaibhawmishra.voela.ui.components.TypeIconTile
 import com.vaibhawmishra.voela.ui.home.RecentAudio
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
@@ -107,7 +107,7 @@ fun LibraryScreen(
                 )
                 Spacer(Modifier.weight(1f))
                 if (uiState.entries.isNotEmpty()) {
-                    HeaderAction(stringResource(R.string.action_select), Purple, onStartSelection)
+                    HeaderAction(stringResource(R.string.action_select), LocalAccent.current.base, onStartSelection)
                     Spacer(Modifier.width(6.dp))
                     HeaderAction(stringResource(R.string.action_clear_all), Warning) { confirm = Confirm.ClearAll }
                 }
@@ -199,9 +199,9 @@ private fun AutoClearControl(days: Int, onSet: (Int) -> Unit) {
                     .padding(start = 14.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(expiryLabel(days), style = MaterialTheme.typography.labelLarge, color = Purple)
+                Text(expiryLabel(days), style = MaterialTheme.typography.labelLarge, color = LocalAccent.current.base)
                 Spacer(Modifier.width(2.dp))
-                Icon(Icons.Outlined.ArrowDropDown, null, tint = Purple, modifier = Modifier.size(18.dp))
+                Icon(Icons.Outlined.ArrowDropDown, null, tint = LocalAccent.current.base, modifier = Modifier.size(18.dp))
             }
             DropdownMenu(
                 expanded = open,
@@ -211,7 +211,7 @@ private fun AutoClearControl(days: Int, onSet: (Int) -> Unit) {
             ) {
                 EXPIRY_OPTIONS.forEach { d ->
                     DropdownMenuItem(
-                        text = { Text(expiryLabel(d), color = if (d == days) Purple else TextPrimary) },
+                        text = { Text(expiryLabel(d), color = if (d == days) LocalAccent.current.base else TextPrimary) },
                         onClick = { onSet(d); open = false },
                     )
                 }
@@ -239,7 +239,7 @@ private fun SelectionBar(count: Int, onSelectAll: () -> Unit, onDelete: () -> Un
             color = TextPrimary,
         )
         Spacer(Modifier.weight(1f))
-        HeaderAction(stringResource(R.string.action_select_all), Purple, onSelectAll)
+        HeaderAction(stringResource(R.string.action_select_all), LocalAccent.current.base, onSelectAll)
         Spacer(Modifier.width(4.dp))
         IconButton(onClick = onDelete) {
             Icon(Icons.Outlined.Delete, stringResource(R.string.action_delete), tint = Warning)
@@ -262,7 +262,7 @@ private fun LibraryRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(Surface)
-            .border(1.dp, if (selected) Purple else Outline, RoundedCornerShape(18.dp))
+            .border(1.dp, if (selected) LocalAccent.current.base else Outline, RoundedCornerShape(18.dp))
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -271,7 +271,7 @@ private fun LibraryRow(
             Icon(
                 if (selected) Icons.Outlined.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
                 null,
-                tint = if (selected) Purple else TextSecondary,
+                tint = if (selected) LocalAccent.current.base else TextSecondary,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.width(12.dp))

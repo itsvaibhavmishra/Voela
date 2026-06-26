@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.feature
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,10 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
+import com.vaibhawmishra.voela.ui.components.DeveloperFooter
 import com.vaibhawmishra.voela.ui.components.OnDeviceFooter
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
@@ -102,6 +103,7 @@ fun SelectFeatureScreen(
 
             Spacer(Modifier.height(20.dp))
             OnDeviceFooter()
+            DeveloperFooter()
             Spacer(Modifier.height(10.dp))
         }
     }
@@ -119,13 +121,13 @@ private fun AudioDetailsCard(uiState: SelectFeatureUiState, onPlayPause: () -> U
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(46.dp).clip(CircleShape).background(Purple).clickable(onClick = onPlayPause),
+            Modifier.size(46.dp).clip(CircleShape).background(LocalAccent.current.base).clickable(onClick = onPlayPause),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (uiState.isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 stringResource(R.string.cd_play),
-                tint = Color.White,
+                tint = LocalAccent.current.onAccent,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -184,10 +186,10 @@ private fun FeatureCard(
         }
         Spacer(Modifier.width(12.dp))
         Box(
-            Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(Purple.copy(alpha = 0.12f)),
+            Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(LocalAccent.current.base.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = Purple, modifier = Modifier.size(18.dp))
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = LocalAccent.current.base, modifier = Modifier.size(18.dp))
         }
     }
 }

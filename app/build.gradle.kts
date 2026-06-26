@@ -17,7 +17,7 @@ android {
         applicationId = "com.vaibhawmishra.voela"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
+        versionCode = 1
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

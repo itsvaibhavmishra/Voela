@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.components
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -16,9 +17,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
-import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.PurpleDeep
-import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.ShareBlue
 import kotlin.math.PI
 import kotlin.math.sin
@@ -35,7 +33,7 @@ private const val TWO_PI = (2.0 * PI).toFloat()
 fun FlowingWaveform(
     modifier: Modifier = Modifier,
     threads: Int = 6,
-    colors: List<Color> = listOf(PurpleGlow, ShareBlue, Purple, InstrumentalTeal, PurpleDeep),
+    colors: List<Color> = listOf(LocalAccent.current.glow, ShareBlue, LocalAccent.current.base, InstrumentalTeal, LocalAccent.current.deep),
 ) {
     val transition = rememberInfiniteTransition(label = "flow")
     val phase by transition.animateFloat(
@@ -52,6 +50,7 @@ fun FlowingWaveform(
         label = "swell",
     )
 
+    val coreGlow = LocalAccent.current.glow
     Canvas(modifier) {
         val w = size.width
         val cy = size.height / 2f
@@ -74,6 +73,6 @@ fun FlowingWaveform(
             drawPath(path, color, style = Stroke(width = 2.5f, cap = StrokeCap.Round))
         }
         // Soft core highlight where the threads bunch up
-        drawCircle(PurpleGlow.copy(alpha = 0.12f), radius = size.height * 0.14f, center = Offset(w / 2f, cy))
+        drawCircle(coreGlow.copy(alpha = 0.12f), radius = size.height * 0.14f, center = Offset(w / 2f, cy))
     }
 }

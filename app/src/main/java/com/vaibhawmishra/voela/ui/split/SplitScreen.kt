@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.split
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -32,11 +33,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.components.DeveloperFooter
 import com.vaibhawmishra.voela.ui.components.FlowingWaveform
 import com.vaibhawmishra.voela.ui.components.OnDeviceFooter
 import com.vaibhawmishra.voela.ui.components.SmoothProgressBar
 import com.vaibhawmishra.voela.ui.formatDurationSeconds
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 import com.vaibhawmishra.voela.ui.trim.TrimFeature
@@ -96,7 +97,7 @@ fun SplitScreen(
                         Modifier
                             .size(6.dp)
                             .clip(CircleShape)
-                            .background(if (i == phase) Purple else TextSecondary.copy(alpha = 0.35f)),
+                            .background(if (i == phase) LocalAccent.current.base else TextSecondary.copy(alpha = 0.35f)),
                     )
                 }
             }
@@ -107,7 +108,7 @@ fun SplitScreen(
                 animationSpec = tween(durationMillis = 900, easing = FastOutSlowInEasing),
                 label = "percent",
             )
-            Text("$animatedPercent%", style = MaterialTheme.typography.headlineSmall, color = Purple)
+            Text("$animatedPercent%", style = MaterialTheme.typography.headlineSmall, color = LocalAccent.current.base)
             Spacer(Modifier.height(14.dp))
             SmoothProgressBar(uiState.progress / 100f, Modifier.fillMaxWidth())
             if (!uiState.isComplete && uiState.etaSeconds > 0) {
@@ -121,6 +122,7 @@ fun SplitScreen(
 
             Spacer(Modifier.weight(1f))
             OnDeviceFooter()
+            DeveloperFooter()
             Spacer(Modifier.height(8.dp))
         }
     }

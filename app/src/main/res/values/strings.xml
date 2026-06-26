@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Voela</string>
+    <string name="app_tagline">Pull sound apart</string>
 
     <!-- Home -->
     <string name="choose_audio_file">Choose Audio File</string>
@@ -26,7 +27,7 @@
     <string name="saving_audio_progress">Saving to Music… %1$d%%</string>
     <string name="download_title">Download audio</string>
     <string name="download_subtitle">Choose a format and quality</string>
-    <string name="saved_to_music">Saved to Music/Voela</string>
+    <string name="saved_to_music">Saved to Music/Voela/YouTube Downloads</string>
     <string name="save_failed">Couldn\'t save audio</string>
     <string name="preparing_audio">Preparing…</string>
     <string name="extracting_audio">Extracting audio…</string>
@@ -106,7 +107,9 @@
     <string name="audiosplit_save_note">Clips save to your library (Music/Voela/Audio Splits).</string>
     <string name="audiosplit_action">Save splits</string>
     <string name="audiosplit_splitting">Saving… %1$d%%</string>
-    <string name="audiosplit_saved">Saved %1$d clips to Audio Splits</string>
+    <string name="audiosplit_saved">Saved %1$d clips to Music/Voela/Audio Splits</string>
+    <string name="audiosplit_clips">%1$d clips</string>
+    <string name="saved_to_audio_splits">Saved to Music/Voela/Audio Splits</string>
     <string name="audiosplit_save_as">Save clips as…</string>
     <string name="settings_title">Settings</string>
     <string name="settings_group_splitting">Splitting</string>
@@ -114,7 +117,18 @@
     <string name="settings_vocal_desc">Output format &amp; quality</string>
     <string name="settings_vocal_format_title">Split Vocals format</string>
     <string name="settings_vocal_format_desc">The format your vocals + instrumental stems are kept in. Audio Split will get its own once it\'s available.</string>
+    <string name="settings_group_appearance">Appearance</string>
+    <string name="settings_theme_title">Theme color</string>
+    <string name="settings_theme_desc">Accent color across the app</string>
+    <string name="settings_theme_screen_desc">Pick an accent color. The app stays in dark mode.</string>
+    <string name="settings_group_storage">Storage</string>
+    <string name="settings_open_folder_title">Open Voela folder</string>
+    <string name="settings_open_folder_desc">Your saved audio in Music/Voela</string>
+    <string name="settings_open_folder_failed">Couldn\'t open the folder on this device</string>
     <string name="cd_settings">Settings</string>
+    <string name="footer_developed_by">Developed by</string>
+    <string name="footer_developer_name">Vaibhaw Mishra</string>
+    <string name="developer_url" translatable="false">https://vaibhaw.netlify.app/</string>
     <string name="library_autoclear">Auto-clear unused after</string>
     <string name="expiry_never">Never</string>
     <string name="expiry_one_day">1 day</string>
@@ -125,7 +139,7 @@
     <string name="result_subtitle">Your audio has been split into vocals and instrumental.</string>
     <string name="result_completed_in">Completed in %1$s</string>
     <string name="result_library_title">Saved stems appear in your library</string>
-    <string name="saved_to_vocal_splits">Saved to Vocal Splits</string>
+    <string name="saved_to_vocal_splits">Saved to Music/Voela/Vocal Splits</string>
 
     <!-- Notifications -->
     <string name="notif_channel_progress">Audio extraction</string>
@@ -134,7 +148,7 @@
     <string name="notif_ready_title">Audio ready</string>
     <string name="notif_saving_title">Saving audio</string>
     <string name="notif_separating_title">Separating audio</string>
-    <string name="notif_saved_title">Saved to Music</string>
+    <string name="notif_saved_title">Saved to Music/Voela</string>
 
     <!-- Content descriptions -->
     <string name="cd_logo">Voela</string>

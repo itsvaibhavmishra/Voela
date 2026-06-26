@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.components
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -21,9 +22,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.PurpleDeep
-import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 
 // A rounded, gradient-filled progress bar. The fill eases smoothly between the
@@ -59,7 +57,7 @@ fun SmoothProgressBar(
                 .fillMaxHeight()
                 .fillMaxWidth(fill.coerceAtLeast(0.02f))
                 .clip(RoundedCornerShape(percent = 50))
-                .background(Brush.horizontalGradient(listOf(PurpleDeep, Purple, PurpleGlow)))
+                .background(Brush.horizontalGradient(listOf(LocalAccent.current.deep, LocalAccent.current.base, LocalAccent.current.glow)))
                 .drawWithContent {
                     drawContent()
                     val band = size.width * 0.35f

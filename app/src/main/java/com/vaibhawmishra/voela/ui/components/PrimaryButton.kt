@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.components
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
 
@@ -35,8 +35,8 @@ fun PrimaryButton(
         enabled = enabled,
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Purple,
-            contentColor = Color.White,
+            containerColor = LocalAccent.current.base,
+            contentColor = LocalAccent.current.onAccent,
             disabledContainerColor = SurfaceElevated,
             disabledContentColor = TextSecondary,
         ),

@@ -107,6 +107,7 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long, 
             .putString(AudioSave.KEY_EXTENSION, option.extension)
             .putString(AudioSave.KEY_TITLE, "${state.title} - ${stem.label}")
             .putString(AudioSave.KEY_SUBPATH, VoelaStorage.vocalSplits(state.title, stamp))
+            .putString(AudioSave.KEY_SAVED_LABEL, getApplication<Application>().getString(R.string.saved_to_vocal_splits))
             .apply { option.bitrate?.let { putString(AudioSave.KEY_BITRATE, it) } }
             .build()
         workManager.enqueueUniqueWork(

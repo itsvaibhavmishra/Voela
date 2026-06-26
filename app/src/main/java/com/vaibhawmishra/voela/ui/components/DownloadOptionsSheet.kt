@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.components
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -33,7 +34,6 @@ import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.DownloadGreen
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
@@ -77,10 +77,10 @@ private fun DownloadOptionRow(option: DownloadOption, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Purple.copy(alpha = 0.14f)),
+            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(LocalAccent.current.base.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Outlined.MusicNote, null, tint = Purple, modifier = Modifier.size(20.dp))
+            Icon(Icons.Outlined.MusicNote, null, tint = LocalAccent.current.base, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {

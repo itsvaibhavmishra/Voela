@@ -33,6 +33,7 @@ import com.vaibhawmishra.voela.ui.library.LibraryViewModel
 import com.vaibhawmishra.voela.ui.result.ResultScreen
 import com.vaibhawmishra.voela.ui.result.ResultViewModel
 import com.vaibhawmishra.voela.ui.settings.SettingFormatScreen
+import com.vaibhawmishra.voela.ui.settings.SettingThemeScreen
 import com.vaibhawmishra.voela.ui.settings.SettingsScreen
 import com.vaibhawmishra.voela.ui.settings.SettingsViewModel
 import com.vaibhawmishra.voela.ui.split.SplitScreen
@@ -49,6 +50,7 @@ private object Routes {
     const val LIBRARY = "library"
     const val SETTINGS = "settings"
     const val SETTINGS_VOCAL_FORMAT = "settings/vocal_format"
+    const val SETTINGS_THEME = "settings/theme"
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
@@ -110,6 +112,16 @@ fun VoelaNavHost() {
                 uiState = state,
                 onBack = navController::popBackStack,
                 onOpenVocalFormat = { navController.navigate(Routes.SETTINGS_VOCAL_FORMAT) },
+                onOpenTheme = { navController.navigate(Routes.SETTINGS_THEME) },
+            )
+        }
+        composable(Routes.SETTINGS_THEME) {
+            val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            SettingThemeScreen(
+                selected = state.accent,
+                onBack = navController::popBackStack,
+                onSelect = viewModel::setAccent,
             )
         }
         composable(Routes.SETTINGS_VOCAL_FORMAT) {

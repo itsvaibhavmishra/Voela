@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.trim
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -53,8 +54,6 @@ import com.vaibhawmishra.voela.ui.components.TrimWaveform
 import com.vaibhawmishra.voela.ui.components.Waveform
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
@@ -107,9 +106,9 @@ fun TrimAudioScreen(
                     startFraction = uiState.startFraction,
                     endFraction = uiState.endFraction,
                     progressFraction = uiState.progressFraction,
-                    selectedColor = PurpleGlow,
-                    mutedColor = Purple.copy(alpha = 0.28f),
-                    handleColor = Purple,
+                    selectedColor = LocalAccent.current.glow,
+                    mutedColor = LocalAccent.current.base.copy(alpha = 0.28f),
+                    handleColor = LocalAccent.current.base,
                     onRangeChange = onRangeChange,
                     modifier = Modifier.fillMaxWidth().height(120.dp),
                 )
@@ -124,8 +123,8 @@ fun TrimAudioScreen(
                     onValueChange = { onRangeChange(it.start, it.endInclusive) },
                     valueRange = 0f..1f,
                     colors = SliderDefaults.colors(
-                        thumbColor = Purple,
-                        activeTrackColor = Purple,
+                        thumbColor = LocalAccent.current.base,
+                        activeTrackColor = LocalAccent.current.base,
                         inactiveTrackColor = SurfaceElevated,
                     ),
                 )
@@ -140,7 +139,7 @@ fun TrimAudioScreen(
                         modifier = Modifier.weight(1f),
                     )
                     Box(Modifier.height(56.dp).width(40.dp), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Outlined.Link, stringResource(R.string.cd_linked), tint = Purple, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Outlined.Link, stringResource(R.string.cd_linked), tint = LocalAccent.current.base, modifier = Modifier.size(18.dp))
                     }
                     TimeField(
                         label = stringResource(R.string.trim_end_time),
@@ -221,7 +220,7 @@ private fun AudioCard(uiState: TrimAudioUiState) {
             contentAlignment = Alignment.Center,
         ) {
             if (uiState.waveform.isNotEmpty()) {
-                Waveform(uiState.waveform, Purple, Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp))
+                Waveform(uiState.waveform, LocalAccent.current.base, Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 12.dp))
             }
         }
         Spacer(Modifier.width(14.dp))
@@ -264,13 +263,13 @@ private fun TimeRuler(durationMs: Long) {
 private fun PlayButton(isPlaying: Boolean, onPlayPause: () -> Unit) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         Box(
-            Modifier.size(56.dp).clip(CircleShape).background(Purple).clickable(onClick = onPlayPause),
+            Modifier.size(56.dp).clip(CircleShape).background(LocalAccent.current.base).clickable(onClick = onPlayPause),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 stringResource(R.string.cd_play),
-                tint = Color.White,
+                tint = LocalAccent.current.onAccent,
                 modifier = Modifier.size(30.dp),
             )
         }
@@ -329,8 +328,8 @@ private fun EngineOption(
     Column(
         modifier
             .clip(RoundedCornerShape(14.dp))
-            .background(if (selected) Purple.copy(alpha = 0.12f) else Background)
-            .border(1.dp, if (selected) Purple else Outline, RoundedCornerShape(14.dp))
+            .background(if (selected) LocalAccent.current.base.copy(alpha = 0.12f) else Background)
+            .border(1.dp, if (selected) LocalAccent.current.base else Outline, RoundedCornerShape(14.dp))
             .then(if (enabled) Modifier.clickable(onClick = onClick) else Modifier)
             .alpha(if (enabled) 1f else 0.55f)
             .padding(14.dp),
@@ -342,7 +341,7 @@ private fun EngineOption(
                 color = if (enabled) TextPrimary else TextSecondary,
                 modifier = Modifier.weight(1f),
             )
-            if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = Purple, modifier = Modifier.size(16.dp))
+            if (selected) Icon(Icons.Outlined.CheckCircle, null, tint = LocalAccent.current.base, modifier = Modifier.size(16.dp))
         }
         Spacer(Modifier.height(3.dp))
         Text(description, style = MaterialTheme.typography.bodySmall, color = TextSecondary)

@@ -29,6 +29,7 @@ class AudioSaveWorker(
         val extension = inputData.getString(AudioSave.KEY_EXTENSION) ?: "m4a"
         val title = inputData.getString(AudioSave.KEY_TITLE).orEmpty().ifBlank { "audio" }
         val subPath = inputData.getString(AudioSave.KEY_SUBPATH) ?: VoelaStorage.youtubeDownloads
+        val savedLabel = inputData.getString(AudioSave.KEY_SAVED_LABEL)
 
         setForeground(notifications.savingForegroundInfo(0))
         return try {
@@ -68,7 +69,7 @@ class AudioSaveWorker(
                     output.delete()
                 }
 
-                notifications.showSaved(displayName)
+                notifications.showSaved(displayName, savedLabel)
                 Result.success(workDataOf(AudioSave.KEY_SAVED_NAME to displayName))
             }
         } catch (t: Throwable) {

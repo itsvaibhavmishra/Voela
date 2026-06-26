@@ -14,10 +14,18 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 class SettingsStore(private val context: Context) {
 
     private val vocalKey = stringPreferencesKey("vocal_format")
+    private val accentKey = stringPreferencesKey("accent_color")
 
     val vocalFormat: Flow<StemFormat> = context.settingsDataStore.data.map { StemFormat.from(it[vocalKey]) }
 
+    // Stored as the accent key; resolved to an Accent (Purple default) by the reader.
+    val accentColor: Flow<String?> = context.settingsDataStore.data.map { it[accentKey] }
+
     suspend fun setVocalFormat(format: StemFormat) {
         context.settingsDataStore.edit { it[vocalKey] = format.key }
+    }
+
+    suspend fun setAccentColor(key: String) {
+        context.settingsDataStore.edit { it[accentKey] = key }
     }
 }

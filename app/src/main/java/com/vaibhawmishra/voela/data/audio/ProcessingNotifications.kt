@@ -60,8 +60,8 @@ class ProcessingNotifications(private val context: Context) {
     fun showComplete(title: String) =
         showDone(DONE_ID, context.getString(R.string.notif_ready_title), title)
 
-    fun showSaved(name: String) =
-        showDone(SAVE_DONE_ID, context.getString(R.string.notif_saved_title), name)
+    fun showSaved(detail: String, location: String? = null) =
+        showDone(SAVE_DONE_ID, location ?: context.getString(R.string.notif_saved_title), detail)
 
     private fun foreground(id: Int, title: String, progress: Int): ForegroundInfo =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {

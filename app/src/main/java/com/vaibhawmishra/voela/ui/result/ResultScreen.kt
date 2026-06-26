@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.result
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,14 +53,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
+import com.vaibhawmishra.voela.ui.components.DeveloperFooter
 import com.vaibhawmishra.voela.ui.components.DownloadOption
 import com.vaibhawmishra.voela.ui.components.DownloadOptionsSheet
 import com.vaibhawmishra.voela.ui.components.PlayableWaveform
 import com.vaibhawmishra.voela.ui.theme.DownloadGreen
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
@@ -125,7 +125,8 @@ fun ResultScreen(
             uiState.stems.forEachIndexed { index, stem ->
                 StemCard(
                     stem = stem,
-                    accent = if (stem.label == "Vocals") Purple else InstrumentalTeal,
+                    accent = if (stem.label == "Vocals") LocalAccent.current.base else InstrumentalTeal,
+                    onAccent = if (stem.label == "Vocals") LocalAccent.current.onAccent else Color(0xFF06201D),
                     icon = if (stem.label == "Vocals") Icons.Outlined.Mic else Icons.Outlined.MusicNote,
                     durationMs = uiState.durationMs,
                     positionMs = uiState.positionFor(index),
@@ -140,6 +141,7 @@ fun ResultScreen(
 
             Spacer(Modifier.height(4.dp))
             LibraryNote()
+            DeveloperFooter()
             Spacer(Modifier.height(8.dp))
         }
         SnackbarHost(
@@ -189,6 +191,7 @@ private fun SummaryCard(uiState: ResultUiState) {
 private fun StemCard(
     stem: StemUi,
     accent: Color,
+    onAccent: Color,
     icon: ImageVector,
     durationMs: Long,
     positionMs: Long,
@@ -229,7 +232,7 @@ private fun StemCard(
         PlayableWaveform(
             bars = stem.waveform,
             progress = progress,
-            playedColor = if (stem.label == "Vocals") PurpleGlow else accent,
+            playedColor = if (stem.label == "Vocals") LocalAccent.current.glow else accent,
             pendingColor = accent.copy(alpha = 0.28f),
             onSeek = onSeek,
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -243,7 +246,7 @@ private fun StemCard(
                 Icon(
                     if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                     stringResource(R.string.cd_play),
-                    tint = Color.White,
+                    tint = onAccent,
                     modifier = Modifier.size(24.dp),
                 )
             }

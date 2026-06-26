@@ -53,6 +53,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
+import com.vaibhawmishra.voela.ui.components.DeveloperFooter
 import com.vaibhawmishra.voela.ui.components.DownloadOptionsSheet
 import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.components.Waveform
@@ -156,6 +157,7 @@ fun AudioSplitScreen(
             onClick = { showFormatSheet = true },
             enabled = uiState.clips.isNotEmpty() && !uiState.splitting,
         )
+        DeveloperFooter()
         Spacer(Modifier.height(8.dp))
     }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.systemBars).padding(16.dp))

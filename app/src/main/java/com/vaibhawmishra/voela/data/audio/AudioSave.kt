@@ -10,6 +10,7 @@ object AudioSave {
     const val KEY_EXTENSION = "extension"
     const val KEY_TITLE = "title"
     const val KEY_SUBPATH = "subpath"
+    const val KEY_SAVED_LABEL = "saved_label"
     const val KEY_PROGRESS = "progress"
     const val KEY_SAVED_NAME = "saved_name"
     const val KEY_ERROR = "error"

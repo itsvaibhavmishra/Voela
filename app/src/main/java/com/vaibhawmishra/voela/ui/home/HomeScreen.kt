@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.home
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -62,13 +63,13 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vaibhawmishra.voela.R
+import com.vaibhawmishra.voela.ui.components.DeveloperFooter
 import com.vaibhawmishra.voela.ui.components.TypeChip
 import com.vaibhawmishra.voela.ui.components.TypeIconTile
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.VoelaTheme
 import com.vaibhawmishra.voela.ui.theme.InstrumentalTeal
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.SurfaceElevated
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
@@ -96,6 +97,12 @@ fun HomeScreen(
             .padding(horizontal = 20.dp),
     ) {
         TopBar(onOpenSettings, onOpenLibrary)
+        Spacer(Modifier.height(6.dp))
+        Text(
+            stringResource(R.string.app_tagline),
+            style = MaterialTheme.typography.bodyMedium,
+            color = TextSecondary,
+        )
         Spacer(Modifier.height(24.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ActionCard(
@@ -119,12 +126,13 @@ fun HomeScreen(
         if (recents.isEmpty()) {
             EmptyRecents(Modifier.weight(1f))
         } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            LazyColumn(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 items(recents, key = { it.id }) { item ->
                     RecentRow(item, onClick = { onRecentClick(item) }, onDelete = { onRecentDelete(item) })
                 }
             }
         }
+        DeveloperFooter()
     }
 }
 
@@ -190,7 +198,7 @@ private fun ActionCard(
                 Modifier.size(40.dp).clip(CircleShape).border(1.dp, Color.White.copy(alpha = 0.12f), CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = Purple, modifier = Modifier.size(22.dp))
+                Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = LocalAccent.current.base, modifier = Modifier.size(22.dp))
             }
         }
     }
@@ -260,7 +268,7 @@ private fun RecentRow(item: RecentAudio, onClick: () -> Unit, onDelete: () -> Un
                 tonalElevation = 0.dp,
                 shadowElevation = 12.dp,
             ) {
-                RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Outlined.OpenInNew, Purple, TextPrimary) {
+                RecentMenuItem(stringResource(R.string.action_open), Icons.AutoMirrored.Outlined.OpenInNew, LocalAccent.current.base, TextPrimary) {
                     menuExpanded = false
                     onClick()
                 }

@@ -9,10 +9,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.vaibhawmishra.voela.data.audio.WorkingCache
+import com.vaibhawmishra.voela.data.settings.SettingsStore
 import com.vaibhawmishra.voela.ui.navigation.VoelaNavHost
 import com.vaibhawmishra.voela.ui.theme.VoelaTheme
+import com.vaibhawmishra.voela.ui.theme.accentFor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +30,9 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
         setContent {
-            VoelaTheme {
+            val store = remember { SettingsStore(applicationContext) }
+            val accentKey by store.accentColor.collectAsState(initial = null)
+            VoelaTheme(accent = accentFor(accentKey)) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,

@@ -1,4 +1,5 @@
 package com.vaibhawmishra.voela.ui.youtube
+import com.vaibhawmishra.voela.ui.theme.LocalAccent
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -73,8 +74,6 @@ import com.vaibhawmishra.voela.ui.components.PrimaryButton
 import com.vaibhawmishra.voela.ui.theme.Background
 import com.vaibhawmishra.voela.ui.theme.DownloadGreen
 import com.vaibhawmishra.voela.ui.theme.Outline
-import com.vaibhawmishra.voela.ui.theme.Purple
-import com.vaibhawmishra.voela.ui.theme.PurpleGlow
 import com.vaibhawmishra.voela.ui.theme.Surface
 import com.vaibhawmishra.voela.ui.theme.TextPrimary
 import com.vaibhawmishra.voela.ui.theme.TextSecondary
@@ -224,7 +223,7 @@ private fun LinkCard(
             shape = RoundedCornerShape(14.dp),
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(stringResource(R.string.youtube_url_hint), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            leadingIcon = { Icon(Icons.Outlined.Link, null, tint = Purple, modifier = Modifier.size(20.dp)) },
+            leadingIcon = { Icon(Icons.Outlined.Link, null, tint = LocalAccent.current.base, modifier = Modifier.size(20.dp)) },
             trailingIcon = {
                 if (url.isNotEmpty() && editable) {
                     IconButton(onClick = { onUrlChange("") }) {
@@ -234,13 +233,13 @@ private fun LinkCard(
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Purple,
+                focusedBorderColor = LocalAccent.current.base,
                 unfocusedBorderColor = Outline,
                 disabledBorderColor = Outline,
                 focusedContainerColor = Background,
                 unfocusedContainerColor = Background,
                 disabledContainerColor = Background,
-                cursorColor = Purple,
+                cursorColor = LocalAccent.current.base,
                 focusedTextColor = TextPrimary,
                 unfocusedTextColor = TextPrimary,
                 disabledTextColor = TextSecondary,
@@ -316,7 +315,7 @@ private fun ProcessingIndicator(progress: Int) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Purple)
+        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = LocalAccent.current.base)
         Spacer(Modifier.width(14.dp))
         Text(
             stringResource(if (progress > 0) R.string.extracting_audio else R.string.preparing_audio),
@@ -351,13 +350,13 @@ private fun ResultRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(Purple).clickable(onClick = onPlayPause),
+            Modifier.size(44.dp).clip(CircleShape).background(LocalAccent.current.base).clickable(onClick = onPlayPause),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 if (isPlaying) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
                 stringResource(R.string.cd_play),
-                tint = Color.White,
+                tint = LocalAccent.current.onAccent,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -365,8 +364,8 @@ private fun ResultRow(
         PlayableWaveform(
             bars = result.waveform,
             progress = progress,
-            playedColor = PurpleGlow,
-            pendingColor = Purple.copy(alpha = 0.3f),
+            playedColor = LocalAccent.current.glow,
+            pendingColor = LocalAccent.current.base.copy(alpha = 0.3f),
             onSeek = onSeek,
             modifier = Modifier.weight(1f).height(40.dp),
         )
@@ -409,10 +408,10 @@ private fun HowItWorksCard() {
 private fun HowItWorksRow(icon: ImageVector, title: String, desc: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(
-            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Purple.copy(alpha = 0.14f)),
+            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(LocalAccent.current.base.copy(alpha = 0.14f)),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(icon, null, tint = Purple, modifier = Modifier.size(20.dp))
+            Icon(icon, null, tint = LocalAccent.current.base, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column {
@@ -436,7 +435,7 @@ private fun RecentLinksSection(
             Text(
                 stringResource(R.string.clear_all),
                 style = MaterialTheme.typography.labelLarge,
-                color = Purple,
+                color = LocalAccent.current.base,
                 modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClearAll).padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
@@ -476,7 +475,7 @@ private fun RecentLinkRow(link: RecentLink, onOpenLink: (RecentLink) -> Unit) {
             Text(link.duration, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
         }
         Spacer(Modifier.width(8.dp))
-        Icon(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.cd_open_link), tint = Purple, modifier = Modifier.size(18.dp))
+        Icon(Icons.AutoMirrored.Outlined.OpenInNew, stringResource(R.string.cd_open_link), tint = LocalAccent.current.base, modifier = Modifier.size(18.dp))
     }
 }
 
