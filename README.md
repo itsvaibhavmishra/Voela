@@ -13,9 +13,9 @@ No cloud, no uploads, no account, no limits.
 
 ## Demo
 
-<video src="https://github.com/itsvaibhavmishra/Voela/raw/main/docs/assets/voela-demo.mp4" controls width="280"></video>
+![Voela demo](docs/assets/voela-demo.gif)
 
-> If the player above doesn't load, [**watch the demo here**](https://github.com/itsvaibhavmishra/Voela/raw/main/docs/assets/voela-demo.mp4).
+> [**Watch the full-quality demo (MP4)**](https://github.com/itsvaibhavmishra/Voela/raw/main/docs/assets/voela-demo.mp4)
 
 ## Features
 
@@ -32,9 +32,11 @@ No cloud, no uploads, no account, no limits.
 
 ## Screens
 
-| Theme picker | Settings |
-| --- | --- |
-| <img src="docs/assets/screenshots/theme.png" width="260"> | <img src="docs/assets/screenshots/settings.png" width="260"> |
+| Home | YouTube extraction | Choose a feature |
+| :---: | :---: | :---: |
+| <img src="docs/assets/screenshots/home.jpg" width="230"> | <img src="docs/assets/screenshots/youtube.jpg" width="230"> | <img src="docs/assets/screenshots/feature.jpg" width="230"> |
+| **Trim** | **Split Audio** | **Separation results** |
+| <img src="docs/assets/screenshots/trim.jpg" width="230"> | <img src="docs/assets/screenshots/split-audio.jpg" width="230"> | <img src="docs/assets/screenshots/results.jpg" width="230"> |
 
 ## Privacy
 
