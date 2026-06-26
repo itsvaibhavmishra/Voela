@@ -1,17 +1,24 @@
 name: Build & Release
 
-# Builds the release APK on every push to main and staging.
-#  - staging: a sandbox that exercises the full build + publish path and updates a
-#    rolling "staging" pre-release, so any failure surfaces here BEFORE main.
-#  - main: publishes a real GitHub Release tagged v<VERSION_NAME> (from version.properties),
-#    but only when that tag doesn't already exist — so ordinary merges that don't bump
-#    the version won't create duplicate releases.
+# Builds the release APK and, depending on the trigger:
+#  - push to staging: a sandbox that exercises the full build + publish path and updates a
+#    rolling "staging" pre-release. This is the pre-merge gate — merge staging -> main only
+#    once this build is green, so failures surface BEFORE main.
+#  - push to main: publishes a real GitHub Release tagged v<VERSION_NAME> (from
+#    version.properties), but only when that tag doesn't already exist, so ordinary merges
+#    that don't bump the version won't create duplicate releases.
 # Version is the single source of truth in /version.properties.
 
 on:
   push:
     branches: [main, staging]
   workflow_dispatch:
+
+# One in-flight run per branch: a newer push/merge cancels the older run so builds
+# never pile up or race on the rolling staging pre-release.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -80,7 +87,7 @@ jobs:
         if: steps.cfg.outputs.skip == 'false'
         uses: actions/upload-artifact@v4
         with:
-          name: Voela-${{ steps.cfg.outputs.name }}-${{ github.ref_name }}
+          name: Voela-${{ steps.cfg.outputs.name }}-${{ github.run_id }}
           path: Voela-${{ steps.cfg.outputs.name }}.apk
 
       - name: Publish staging sandbox pre-release

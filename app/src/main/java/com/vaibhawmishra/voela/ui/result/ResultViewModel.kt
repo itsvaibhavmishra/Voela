@@ -53,14 +53,20 @@ class ResultViewModel(application: Application, title: String, elapsedMs: Long, 
         player.addListener(object : Player.Listener {
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (isPlaying) startPositionUpdates() else positionJob?.cancel()
-                if (!isPlaying) _uiState.update { it.copy(playingIndex = if (player.playbackState == Player.STATE_ENDED) -1 else it.playingIndex) }
+                _uiState.update {
+                    it.copy(
+                        isPlaying = isPlaying,
+                        // Keep the selected stem on pause (so seek/position stay bound); clear it only when the track ends.
+                        playingIndex = if (!isPlaying && player.playbackState == Player.STATE_ENDED) -1 else it.playingIndex,
+                    )
+                }
             }
 
             override fun onPlaybackStateChanged(state: Int) {
                 if (state == Player.STATE_ENDED) {
                     player.pause()
                     player.seekTo(0)
-                    _uiState.update { it.copy(playingIndex = -1, positionMs = 0) }
+                    _uiState.update { it.copy(playingIndex = -1, isPlaying = false, positionMs = 0) }
                 }
             }
         })

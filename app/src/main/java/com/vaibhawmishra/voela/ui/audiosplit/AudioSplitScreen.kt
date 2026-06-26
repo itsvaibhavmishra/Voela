@@ -106,7 +106,7 @@ fun AudioSplitScreen(
             .windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 20.dp),
     ) {
-        AppHeader(onBack)
+        AppHeader(onBack, home = true)
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.audiosplit_title), style = MaterialTheme.typography.headlineMedium, color = TextPrimary)
         Spacer(Modifier.height(4.dp))

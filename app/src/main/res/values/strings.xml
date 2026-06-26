@@ -42,7 +42,7 @@
     <string name="recent_links">Recent Links</string>
     <string name="clear_all">Clear All</string>
     <string name="recent_links_empty">Links you extract will appear here</string>
-    <string name="tos_title">We respect YouTube\'s Terms of Service.</string>
+    <string name="tos_title">We respect YouTube\'s Terms of Service. Only extract audio you have the right to use.</string>
 
     <!-- Select Feature screen -->
     <string name="feature_title">Select a feature</string>
@@ -155,6 +155,7 @@
     <string name="cd_library">Library</string>
     <string name="cd_more_options">More options</string>
     <string name="cd_back">Back</string>
+    <string name="cd_home">Home</string>
     <string name="cd_clear">Clear</string>
     <string name="cd_play">Play</string>
     <string name="cd_download">Download</string>

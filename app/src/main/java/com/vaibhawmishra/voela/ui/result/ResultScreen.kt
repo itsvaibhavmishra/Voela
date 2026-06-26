@@ -131,7 +131,7 @@ fun ResultScreen(
                     durationMs = uiState.durationMs,
                     positionMs = uiState.positionFor(index),
                     progress = uiState.progressFor(index),
-                    isPlaying = uiState.playingIndex == index,
+                    isPlaying = uiState.playingIndex == index && uiState.isPlaying,
                     onPlayPause = { onPlayPause(index) },
                     onSeek = { onSeek(index, it) },
                     onSave = { sheetForIndex = index },
