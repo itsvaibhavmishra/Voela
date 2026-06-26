@@ -15,6 +15,7 @@ data class ResultUiState(
     val sampleRate: Int = 0,
     val stems: List<StemUi> = emptyList(),
     val playingIndex: Int = -1,
+    val isPlaying: Boolean = false,
     val positionMs: Long = 0,
     val message: String? = null,
 ) {

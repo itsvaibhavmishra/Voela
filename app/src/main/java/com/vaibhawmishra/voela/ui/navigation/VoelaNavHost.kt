@@ -241,7 +241,7 @@ fun VoelaNavHost() {
             val state by viewModel.uiState.collectAsStateWithLifecycle()
             AudioSplitScreen(
                 uiState = state,
-                onBack = navController::popBackStack,
+                onBack = { navController.popBackStack(Routes.HOME, false) },
                 onUnitChange = viewModel::onUnitChange,
                 onStepUp = viewModel::stepUp,
                 onStepDown = viewModel::stepDown,
