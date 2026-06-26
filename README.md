@@ -8,7 +8,7 @@ No cloud, no uploads, no account, no limits.
 
 ![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
 ![Min SDK](https://img.shields.io/badge/minSdk-26-blue)
-![Version](https://img.shields.io/badge/version-1.0.1-8B5CF6)
+![Version](https://img.shields.io/badge/version-1.1.1-8B5CF6)
 ![On-device](https://img.shields.io/badge/processing-100%25%20on--device-34D399)
 
 ## Demo

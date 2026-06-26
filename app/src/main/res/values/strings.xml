@@ -78,6 +78,7 @@
     <string name="split_phase_separating">Separating frequencies…</string>
     <string name="split_phase_finishing">Almost done…</string>
     <string name="split_time_left">~%1$s left</string>
+    <string name="split_almost_done">Wrapping up…</string>
     <string name="library_title">Library</string>
     <string name="library_empty">Your extractions and splits will appear here.</string>
     <string name="library_storage">%1$s used · %2$d saved</string>
@@ -170,7 +171,7 @@
     <string name="repo_url" translatable="false">https://github.com/itsvaibhavmishra/Voela</string>
     <string name="about_whats_new">What\'s new in this version</string>
     <!-- Changelog for the build that ships this APK. Update on every release. -->
-    <string name="about_changelog">- In-app updates: get notified when a new version is out and install it without leaving the app\n- Fresh app icon and refreshed logo\n- New About screen with version info and links\n- Polish and small fixes under the hood</string>
+    <string name="about_changelog">- Smoother progress on the vocal separation screen (no more stalling near the end)\n- Small fixes and polish</string>
     <!-- Update sheet -->
     <string name="update_available_title">Update available</string>
     <string name="update_currently_on">You\'re on %1$s</string>

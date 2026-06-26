@@ -85,6 +85,19 @@ class SplitViewModel(
                 }
             }
         }
+        // Creep the bar forward between the worker's coarse updates and through its silent
+        // final phase (iSTFT, encode, save), so it never looks frozen near the top. Real
+        // worker progress still wins via maxOf; this only fills the gaps.
+        viewModelScope.launch {
+            while (true) {
+                delay(900)
+                _uiState.update {
+                    val ceiling = if (workDone) 99 else 97
+                    if (it.isComplete || it.failed || it.progress >= ceiling) it
+                    else it.copy(progress = it.progress + 1)
+                }
+            }
+        }
     }
 
     fun cancel() = workManager.cancelUniqueWork(VocalSeparation.WORK_NAME)
