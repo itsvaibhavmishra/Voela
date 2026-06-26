@@ -1,7 +1,19 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Version + signing are read from files so they can be set manually and in CI.
+val versionProps = Properties().apply {
+    rootProject.file("version.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+val keystoreProps = Properties().apply {
+    rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+// Release keystore comes from CI env (secrets) or a local keystore.properties; null means none.
+val releaseStorePath: String? = System.getenv("KEYSTORE_FILE") ?: keystoreProps.getProperty("storeFile")
 
 android {
     namespace = "com.vaibhawmishra.voela"
@@ -17,8 +29,8 @@ android {
         applicationId = "com.vaibhawmishra.voela"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = (versionProps.getProperty("VERSION_CODE") ?: "1").trim().toInt()
+        versionName = (versionProps.getProperty("VERSION_NAME") ?: "1.0").trim()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -34,6 +46,17 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            if (releaseStorePath != null) {
+                storeFile = file(releaseStorePath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: keystoreProps.getProperty("storePassword")
+                keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProps.getProperty("keyAlias")
+                keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -42,8 +65,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Signed with the debug key so this test build is sideloadable
-            signingConfig = signingConfigs.getByName("debug")
+            // Use a real release keystore when configured (CI secret or local keystore.properties);
+            // otherwise fall back to the debug key so local/sideload builds still work.
+            signingConfig = if (releaseStorePath != null) signingConfigs.getByName("release")
+                            else signingConfigs.getByName("debug")
         }
     }
     compileOptions {
