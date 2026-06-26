@@ -32,10 +32,14 @@ import com.vaibhawmishra.voela.ui.library.LibraryScreen
 import com.vaibhawmishra.voela.ui.library.LibraryViewModel
 import com.vaibhawmishra.voela.ui.result.ResultScreen
 import com.vaibhawmishra.voela.ui.result.ResultViewModel
+import androidx.compose.foundation.layout.Box
+import com.vaibhawmishra.voela.ui.settings.SettingAboutScreen
 import com.vaibhawmishra.voela.ui.settings.SettingFormatScreen
 import com.vaibhawmishra.voela.ui.settings.SettingThemeScreen
 import com.vaibhawmishra.voela.ui.settings.SettingsScreen
 import com.vaibhawmishra.voela.ui.settings.SettingsViewModel
+import com.vaibhawmishra.voela.ui.update.UpdateDialog
+import com.vaibhawmishra.voela.ui.update.UpdateViewModel
 import com.vaibhawmishra.voela.ui.split.SplitScreen
 import com.vaibhawmishra.voela.ui.split.SplitViewModel
 import com.vaibhawmishra.voela.ui.trim.TrimAudioScreen
@@ -51,6 +55,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val SETTINGS_VOCAL_FORMAT = "settings/vocal_format"
     const val SETTINGS_THEME = "settings/theme"
+    const val SETTINGS_ABOUT = "settings/about"
     const val FEATURE = "feature/{name}/{source}"
     const val TRIM = "trim/{feature}/{name}/{source}"
     const val PROCESS = "process/{feature}/{name}/{source}/{start}/{end}/{engine}"
@@ -95,15 +100,29 @@ fun VoelaNavHost() {
             val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
                 uri?.let { navController.navigate(Routes.feature(displayName(context, it), it.toString())) }
             }
-            HomeScreen(
-                recents = recents,
-                onChooseFile = { picker.launch("audio/*") },
-                onYouTubeUrl = { navController.navigate(Routes.youtube()) },
-                onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
-                onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                onRecentClick = { openLibraryItem(navController, it) },
-                onRecentDelete = { homeViewModel.delete(it.id) },
-            )
+            val updateViewModel: UpdateViewModel = viewModel(factory = UpdateViewModel.Factory)
+            val updateState by updateViewModel.state.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { updateViewModel.autoCheck() }
+            Box {
+                HomeScreen(
+                    recents = recents,
+                    onChooseFile = { picker.launch("audio/*") },
+                    onYouTubeUrl = { navController.navigate(Routes.youtube()) },
+                    onOpenLibrary = { navController.navigate(Routes.LIBRARY) },
+                    onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                    onRecentClick = { openLibraryItem(navController, it) },
+                    onRecentDelete = { homeViewModel.delete(it.id) },
+                )
+                UpdateDialog(
+                    state = updateState,
+                    onUpdate = updateViewModel::update,
+                    onLater = updateViewModel::later,
+                    onProceedInstall = updateViewModel::proceedInstall,
+                    onOpenInstallSettings = updateViewModel::openInstallSettings,
+                    onCancelDownload = updateViewModel::cancelDownload,
+                    onDismiss = updateViewModel::dismiss,
+                )
+            }
         }
         composable(Routes.SETTINGS) {
             val viewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
@@ -113,6 +132,22 @@ fun VoelaNavHost() {
                 onBack = navController::popBackStack,
                 onOpenVocalFormat = { navController.navigate(Routes.SETTINGS_VOCAL_FORMAT) },
                 onOpenTheme = { navController.navigate(Routes.SETTINGS_THEME) },
+                onOpenAbout = { navController.navigate(Routes.SETTINGS_ABOUT) },
+            )
+        }
+        composable(Routes.SETTINGS_ABOUT) {
+            val updateViewModel: UpdateViewModel = viewModel(factory = UpdateViewModel.Factory)
+            val updateState by updateViewModel.state.collectAsStateWithLifecycle()
+            SettingAboutScreen(
+                updateState = updateState,
+                onCheck = updateViewModel::checkNow,
+                onUpdate = updateViewModel::update,
+                onLater = updateViewModel::later,
+                onProceedInstall = updateViewModel::proceedInstall,
+                onOpenInstallSettings = updateViewModel::openInstallSettings,
+                onCancelDownload = updateViewModel::cancelDownload,
+                onDismissUpdate = updateViewModel::dismiss,
+                onBack = navController::popBackStack,
             )
         }
         composable(Routes.SETTINGS_THEME) {

@@ -24,6 +24,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.Icon
@@ -54,6 +55,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenVocalFormat: () -> Unit,
     onOpenTheme: () -> Unit,
+    onOpenAbout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -103,6 +105,15 @@ fun SettingsScreen(
                     Toast.makeText(context, R.string.settings_open_folder_failed, Toast.LENGTH_SHORT).show()
                 }
             },
+        )
+        Spacer(Modifier.height(24.dp))
+        GroupLabel(stringResource(R.string.settings_group_about))
+        SettingRow(
+            icon = Icons.Outlined.Info,
+            iconTint = TextSecondary,
+            title = stringResource(R.string.settings_about_title),
+            subtitle = stringResource(R.string.settings_about_desc),
+            onClick = onOpenAbout,
         )
         Spacer(Modifier.weight(1f))
         DeveloperFooter()
