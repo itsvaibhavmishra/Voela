@@ -29,7 +29,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,7 +40,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.pm.PackageInfoCompat
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.AppHeader
 import com.vaibhawmishra.voela.ui.components.DeveloperFooter
@@ -72,10 +70,6 @@ fun SettingAboutScreen(
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val accent = LocalAccent.current
-    val versionCode = remember {
-        val pi = context.packageManager.getPackageInfo(context.packageName, 0)
-        PackageInfoCompat.getLongVersionCode(pi)
-    }
 
     Column(
         modifier
@@ -119,7 +113,7 @@ fun SettingAboutScreen(
             )
             Spacer(Modifier.height(6.dp))
             Text(
-                stringResource(R.string.about_version, updateState.currentVersion, versionCode),
+                stringResource(R.string.about_version, updateState.currentVersion),
                 style = MaterialTheme.typography.bodySmall, color = TextSecondary,
             )
             Spacer(Modifier.height(28.dp))

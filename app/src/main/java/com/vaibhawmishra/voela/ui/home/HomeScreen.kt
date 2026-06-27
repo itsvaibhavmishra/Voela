@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.vaibhawmishra.voela.R
 import com.vaibhawmishra.voela.ui.components.DeveloperFooter
+import com.vaibhawmishra.voela.ui.components.VoelaLogo
 import com.vaibhawmishra.voela.ui.components.TypeChip
 import com.vaibhawmishra.voela.ui.components.TypeIconTile
 import com.vaibhawmishra.voela.ui.theme.Background
@@ -142,11 +143,7 @@ private fun TopBar(onOpenSettings: () -> Unit, onOpenLibrary: () -> Unit) {
         Modifier.fillMaxWidth().padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
-            painter = painterResource(R.drawable.logo_voela),
-            contentDescription = stringResource(R.string.cd_logo),
-            modifier = Modifier.height(42.dp),
-        )
+        VoelaLogo(modifier = Modifier.height(42.dp))
         Spacer(Modifier.weight(1f))
         IconButton(onClick = onOpenSettings) {
             Icon(Icons.Outlined.Settings, stringResource(R.string.cd_settings), tint = TextSecondary)

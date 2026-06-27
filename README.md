@@ -1,6 +1,13 @@
-# Voela
+<div align="center">
+  <img src="docs/assets/banner.png" alt="Voela - Pull sound apart" width="100%" />
+</div>
 
-### Pull sound apart.
+<br/>
+
+> [!IMPORTANT]
+> Please leave a ⭐ if you like this project
+
+<br/>
 
 Voela is an on-device Android audio toolkit. Extract audio from YouTube, separate vocals
 from the instrumental, and cut audio into clips - all processed **locally on your device**.
@@ -44,14 +51,22 @@ Everything happens on your device. Audio is never uploaded, and the app works fu
 once a track is on your phone. Exported files land in your own **Music/Voela** folder; the
 working library is kept app-private.
 
-## Tech
+## 💻 Tech Stack
 
-- **Kotlin** + **Jetpack Compose** (Material 3), single-activity, Navigation Compose
-- **Media3** ExoPlayer & Transformer for playback and transcoding
-- **WorkManager** foreground workers for background processing
-- **On-device vocal separation** - native ONNX Runtime with a KissFFT STFT/iSTFT pipeline (JNI/C)
-- **Bundled LAME** for MP3 export · **youtubedl-android** for extraction
-- `arm64-v8a`, minSdk 26, dark-mode only
+![Kotlin](https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Material 3](https://img.shields.io/badge/Material%203-757575?style=for-the-badge&logo=materialdesign&logoColor=white)
+![Gradle](https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white)
+![C / JNI](https://img.shields.io/badge/C%20%2F%20JNI-A8B9CC?style=for-the-badge&logo=c&logoColor=black)
+![ONNX Runtime](https://img.shields.io/badge/ONNX%20Runtime-005CED?style=for-the-badge&logo=onnx&logoColor=white)
+![Media3 ExoPlayer](https://img.shields.io/static/v1?style=for-the-badge&message=Media3+ExoPlayer&color=3DDC84&logo=android&logoColor=white&label=)
+![WorkManager](https://img.shields.io/static/v1?style=for-the-badge&message=WorkManager&color=4285F4&logo=android&logoColor=white&label=)
+![KissFFT](https://img.shields.io/static/v1?style=for-the-badge&message=KissFFT+STFT&color=222222&label=)
+![LAME](https://img.shields.io/static/v1?style=for-the-badge&message=LAME+MP3&color=000000&label=)
+![yt-dlp](https://img.shields.io/badge/yt--dlp-FF0000?style=for-the-badge&logo=youtube&logoColor=white)
+
+Native vocal separation runs on ONNX Runtime with a KissFFT STFT/iSTFT pipeline (JNI/C). Single-activity Compose, Navigation Compose, targets `arm64-v8a` · minSdk 26 · compileSdk 36 · dark mode only.
 
 ## Build
 
@@ -79,3 +94,13 @@ Download the latest build from the [**Releases**](https://github.com/itsvaibhavm
 ## License
 
 All rights reserved.
+
+<br/>
+
+<div align="center">
+<img src="https://komarev.com/ghpvc/?username=itsvaibhavmishra&&style=for-the-badge" align="center" />
+</div>
+
+<br/>
+
+---
