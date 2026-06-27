@@ -161,7 +161,7 @@
     <string name="settings_group_about">About</string>
     <string name="settings_about_title">About Voela</string>
     <string name="settings_about_desc">Version, updates, and links</string>
-    <string name="about_version">Version %1$s (%2$d)</string>
+    <string name="about_version">Version %1$s</string>
     <string name="about_check_updates">Check for updates</string>
     <string name="about_checking">Checking for updates…</string>
     <string name="about_uptodate">You\'re on the latest version</string>
@@ -171,7 +171,7 @@
     <string name="repo_url" translatable="false">https://github.com/itsvaibhavmishra/Voela</string>
     <string name="about_whats_new">What\'s new in this version</string>
     <!-- Changelog for the build that ships this APK. Update on every release. -->
-    <string name="about_changelog">- Smoother progress on the vocal separation screen (no more stalling near the end)\n- Small fixes and polish</string>
+    <string name="about_changelog">- The app logo now follows your chosen theme colour\n- Cleaner About screen\n- Small visual polish</string>
     <!-- Update sheet -->
     <string name="update_available_title">Update available</string>
     <string name="update_currently_on">You\'re on %1$s</string>
